@@ -10,11 +10,8 @@ TrafficController::TrafficController()
     lanes[3] = Lane(WEST_RED, WEST_YELLOW, WEST_GREEN);
 
     currentLane = 0;
-
     currentState = GREEN_STATE;
-
     previousMillis = 0;
-
     stateDuration = MIN_GREEN_TIME * 1000UL;
 }
 
@@ -25,6 +22,14 @@ void TrafficController::begin()
         lanes[i].begin();
         lanes[i].red();
     }
+
+    // Simulated vehicle counts
+    lanes[0].setVehicleCount(10);
+    lanes[1].setVehicleCount(2);
+    lanes[2].setVehicleCount(6);
+    lanes[3].setVehicleCount(1);
+
+    printStatus();
 
     lanes[currentLane].green();
 
@@ -44,9 +49,7 @@ void TrafficController::nextLane()
     currentLane++;
 
     if (currentLane >= 4)
-    {
         currentLane = 0;
-    }
 }
 
 void TrafficController::changeState()
@@ -56,33 +59,23 @@ void TrafficController::changeState()
     case GREEN_STATE:
 
         lanes[currentLane].yellow();
-
         currentState = YELLOW_STATE;
-
         stateDuration = YELLOW_TIME * 1000UL;
-
         break;
 
     case YELLOW_STATE:
 
         allRed();
-
         currentState = ALL_RED_STATE;
-
         stateDuration = 1000;
-
         break;
 
     case ALL_RED_STATE:
 
         nextLane();
-
         lanes[currentLane].green();
-
         currentState = GREEN_STATE;
-
         stateDuration = MIN_GREEN_TIME * 1000UL;
-
         break;
     }
 
@@ -95,4 +88,51 @@ void TrafficController::update()
     {
         changeState();
     }
+}
+
+void TrafficController::printStatus()
+{
+    Serial.println("================================");
+
+    const char *laneNames[4] =
+    {
+        "North",
+        "East",
+        "South",
+        "West"
+    };
+
+    for (int i = 0; i < 4; i++)
+    {
+        Serial.print(laneNames[i]);
+        Serial.print(" Vehicles: ");
+        Serial.print(lanes[i].getVehicleCount());
+
+        Serial.print(" Waiting: ");
+        Serial.print(lanes[i].getWaitingTime());
+
+        Serial.print(" Priority: ");
+        Serial.println(lanes[i].getPriorityScore());
+    }
+
+    Serial.println("================================");
+}
+
+int TrafficController::getHighestPriorityLane()
+{
+    int bestLane = 0;
+    float highestPriority = lanes[0].getPriorityScore();
+
+    for (int i = 1; i < 4; i++)
+    {
+        float priority = lanes[i].getPriorityScore();
+
+        if (priority > highestPriority)
+        {
+            highestPriority = priority;
+            bestLane = i;
+        }
+    }
+
+    return bestLane;
 }

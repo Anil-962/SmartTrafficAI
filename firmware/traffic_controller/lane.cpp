@@ -95,3 +95,12 @@ TrafficLight& Lane::getTrafficLight()
 {
     return signal;
 }
+void Lane::addVehicle()
+{
+    vehicleCount++;
+}
+
+void Lane::clearVehicles()
+{
+    vehicleCount = 0;
+}

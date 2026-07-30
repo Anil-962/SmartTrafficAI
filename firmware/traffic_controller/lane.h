@@ -25,6 +25,8 @@ public:
     void yellow();
     void green();
     void off();
+    void addVehicle();
+    void clearVehicles();
 
     // Vehicle count
     void setVehicleCount(int count);
