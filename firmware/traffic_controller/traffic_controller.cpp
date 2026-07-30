@@ -10,6 +10,12 @@ TrafficController::TrafficController()
     lanes[3] = Lane(WEST_RED, WEST_YELLOW, WEST_GREEN);
 
     currentLane = 0;
+
+    currentState = GREEN_STATE;
+
+    previousMillis = 0;
+
+    stateDuration = MIN_GREEN_TIME * 1000UL;
 }
 
 void TrafficController::begin()
@@ -17,9 +23,12 @@ void TrafficController::begin()
     for (int i = 0; i < 4; i++)
     {
         lanes[i].begin();
+        lanes[i].red();
     }
 
-    allRed();
+    lanes[currentLane].green();
+
+    previousMillis = millis();
 }
 
 void TrafficController::allRed()
@@ -35,11 +44,55 @@ void TrafficController::nextLane()
     currentLane++;
 
     if (currentLane >= 4)
+    {
         currentLane = 0;
+    }
+}
+
+void TrafficController::changeState()
+{
+    switch (currentState)
+    {
+    case GREEN_STATE:
+
+        lanes[currentLane].yellow();
+
+        currentState = YELLOW_STATE;
+
+        stateDuration = YELLOW_TIME * 1000UL;
+
+        break;
+
+    case YELLOW_STATE:
+
+        allRed();
+
+        currentState = ALL_RED_STATE;
+
+        stateDuration = 1000;
+
+        break;
+
+    case ALL_RED_STATE:
+
+        nextLane();
+
+        lanes[currentLane].green();
+
+        currentState = GREEN_STATE;
+
+        stateDuration = MIN_GREEN_TIME * 1000UL;
+
+        break;
+    }
+
+    previousMillis = millis();
 }
 
 void TrafficController::update()
 {
-    // Version 1
-    // Scheduler logic will be added later.
+    if (millis() - previousMillis >= stateDuration)
+    {
+        changeState();
+    }
 }
