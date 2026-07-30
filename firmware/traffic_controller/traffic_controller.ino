@@ -1,25 +1,23 @@
-#include "config.h"
-#include "lane.h"
+#include <Arduino.h>
+#include "traffic_controller.h"
 
-Lane north(
-    NORTH_RED,
-    NORTH_YELLOW,
-    NORTH_GREEN
-);
+TrafficController controller;
 
 void setup()
 {
-    north.begin();
+    Serial.begin(115200);
+
+    Serial.println("=================================");
+    Serial.println("Smart Traffic Management System");
+    Serial.println("Initializing...");
+    Serial.println("=================================");
+
+    controller.begin();
+
+    Serial.println("System Ready");
 }
 
 void loop()
 {
-    north.getTrafficLight().red();
-    delay(3000);
-
-    north.getTrafficLight().yellow();
-    delay(1000);
-
-    north.getTrafficLight().green();
-    delay(3000);
+    controller.update();
 }

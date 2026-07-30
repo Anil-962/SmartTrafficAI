@@ -1,12 +1,40 @@
 #include "lane.h"
 #include "config.h"
 
+// Default constructor
+Lane::Lane()
+{
+    vehicleCount = 0;
+    waitingTime = 0;
+    emergency = false;
+}
+
+// Parameterized constructor
 Lane::Lane(int redPin, int yellowPin, int greenPin)
     : signal(redPin, yellowPin, greenPin)
 {
     vehicleCount = 0;
     waitingTime = 0;
     emergency = false;
+}
+void Lane::red()
+{
+    signal.red();
+}
+
+void Lane::yellow()
+{
+    signal.yellow();
+}
+
+void Lane::green()
+{
+    signal.green();
+}
+
+void Lane::off()
+{
+    signal.off();
 }
 
 void Lane::begin()

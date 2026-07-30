@@ -9,16 +9,17 @@ private:
     int greenPin;
 
 public:
+    // Default constructor
+    TrafficLight();
+
+    // Parameterized constructor
     TrafficLight(int red, int yellow, int green);
 
     void begin();
 
     void red();
-
     void yellow();
-
     void green();
-
     void off();
 };
 

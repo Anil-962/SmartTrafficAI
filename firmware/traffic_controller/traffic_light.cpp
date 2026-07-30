@@ -1,6 +1,15 @@
-#include "Arduino.h"
+#include <Arduino.h>
 #include "traffic_light.h"
 
+// Default constructor
+TrafficLight::TrafficLight()
+{
+    redPin = -1;
+    yellowPin = -1;
+    greenPin = -1;
+}
+
+// Parameterized constructor
 TrafficLight::TrafficLight(int red, int yellow, int green)
 {
     redPin = red;
@@ -10,6 +19,8 @@ TrafficLight::TrafficLight(int red, int yellow, int green)
 
 void TrafficLight::begin()
 {
+    if (redPin == -1) return;
+
     pinMode(redPin, OUTPUT);
     pinMode(yellowPin, OUTPUT);
     pinMode(greenPin, OUTPUT);

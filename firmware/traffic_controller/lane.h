@@ -13,22 +13,36 @@ private:
     bool emergency;
 
 public:
+    // Default constructor
+    Lane();
+
+    // Parameterized constructor
     Lane(int redPin, int yellowPin, int greenPin);
 
+    // Initialize lane
     void begin();
+    void red();
+    void yellow();
+    void green();
+    void off();
 
+    // Vehicle count
     void setVehicleCount(int count);
     int getVehicleCount() const;
 
+    // Waiting time
     void incrementWaitingTime();
     void resetWaitingTime();
     int getWaitingTime() const;
 
+    // Emergency
     void setEmergency(bool status);
     bool isEmergency() const;
 
+    // Priority
     float getPriorityScore() const;
 
+    // Traffic Light Access
     TrafficLight& getTrafficLight();
 };
 
