@@ -1,8 +1,11 @@
-#include <Arduino.h>
 #include "config.h"
-#include "traffic_light.h"
+#include "lane.h"
 
-TrafficLight north(NORTH_RED, NORTH_YELLOW, NORTH_GREEN);
+Lane north(
+    NORTH_RED,
+    NORTH_YELLOW,
+    NORTH_GREEN
+);
 
 void setup()
 {
@@ -11,12 +14,12 @@ void setup()
 
 void loop()
 {
-    north.red();
+    north.getTrafficLight().red();
     delay(3000);
 
-    north.yellow();
+    north.getTrafficLight().yellow();
     delay(1000);
 
-    north.green();
+    north.getTrafficLight().green();
     delay(3000);
 }
