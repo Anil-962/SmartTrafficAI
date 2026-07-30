@@ -31,6 +31,8 @@ public:
 
     void nextLane();
     void allRed();
+    void updateWaitingTimes();
+    void simulateTraffic();
 
     int getHighestPriorityLane();
 

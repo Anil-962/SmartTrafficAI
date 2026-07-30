@@ -27,6 +27,8 @@ public:
     void off();
     void addVehicle();
     void clearVehicles();
+    void removeVehicles(int count);
+    void addVehicles(int count);
 
     // Vehicle count
     void setVehicleCount(int count);

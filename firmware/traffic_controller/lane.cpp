@@ -104,3 +104,14 @@ void Lane::clearVehicles()
 {
     vehicleCount = 0;
 }
+void Lane::removeVehicles(int count)
+{
+    vehicleCount -= count;
+
+    if (vehicleCount < 0)
+        vehicleCount = 0;
+}
+ void Lane::addVehicles(int count)
+    {
+    vehicleCount += count;
+    }

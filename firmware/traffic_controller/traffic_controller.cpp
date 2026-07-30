@@ -24,16 +24,22 @@ void TrafficController::begin()
     }
 
     // Simulated vehicle counts
-    lanes[0].setVehicleCount(10);
-    lanes[1].setVehicleCount(2);
+    lanes[0].setVehicleCount(3);
+    lanes[1].setVehicleCount(15);
     lanes[2].setVehicleCount(6);
     lanes[3].setVehicleCount(1);
 
     printStatus();
+    int bestLane = getHighestPriorityLane();
 
+    Serial.print("Best Lane = ");
+    Serial.println(bestLane);
+
+    currentLane = getHighestPriorityLane();
     lanes[currentLane].green();
 
     previousMillis = millis();
+    Serial.println("Reached here");
 }
 
 void TrafficController::allRed()
@@ -72,10 +78,21 @@ void TrafficController::changeState()
 
     case ALL_RED_STATE:
 
-        nextLane();
+        updateWaitingTimes();
+        lanes[currentLane].removeVehicles(5);
+        simulateTraffic();
+        printStatus();
+
+        currentLane = getHighestPriorityLane();
+        Serial.print("Next Green Lane = ");
+        Serial.println(currentLane);
+
         lanes[currentLane].green();
+
         currentState = GREEN_STATE;
+
         stateDuration = MIN_GREEN_TIME * 1000UL;
+
         break;
     }
 
@@ -92,9 +109,9 @@ void TrafficController::update()
 
 void TrafficController::printStatus()
 {
-    Serial.println("================================");
+    Serial.println("========== START ==========");
 
-    const char *laneNames[4] =
+    const char* laneNames[4] =
     {
         "North",
         "East",
@@ -104,18 +121,25 @@ void TrafficController::printStatus()
 
     for (int i = 0; i < 4; i++)
     {
-        Serial.print(laneNames[i]);
-        Serial.print(" Vehicles: ");
-        Serial.print(lanes[i].getVehicleCount());
+        Serial.print("Lane Index = ");
+        Serial.println(i);
 
-        Serial.print(" Waiting: ");
-        Serial.print(lanes[i].getWaitingTime());
+        Serial.print("Name = ");
+        Serial.println(laneNames[i]);
 
-        Serial.print(" Priority: ");
+        Serial.print("Vehicles = ");
+        Serial.println(lanes[i].getVehicleCount());
+
+        Serial.print("Waiting = ");
+        Serial.println(lanes[i].getWaitingTime());
+
+        Serial.print("Priority = ");
         Serial.println(lanes[i].getPriorityScore());
+
+        Serial.println("----------------");
     }
 
-    Serial.println("================================");
+    Serial.println("=========== END ===========");
 }
 
 int TrafficController::getHighestPriorityLane()
@@ -135,4 +159,26 @@ int TrafficController::getHighestPriorityLane()
     }
 
     return bestLane;
+}
+void TrafficController::updateWaitingTimes()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (i == currentLane)
+        {
+            lanes[i].resetWaitingTime();
+        }
+        else
+        {
+            lanes[i].incrementWaitingTime();
+        }
+    }
+}
+void TrafficController::simulateTraffic()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        int newVehicles = random(0, 4);   // 0–3 new vehicles
+        lanes[i].addVehicles(newVehicles);
+    }
 }
