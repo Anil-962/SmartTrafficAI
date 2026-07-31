@@ -17,29 +17,30 @@ TrafficController::TrafficController()
 
 void TrafficController::begin()
 {
-    for (int i = 0; i < 4; i++)
+    for(int i=0;i<4;i++)
     {
         lanes[i].begin();
         lanes[i].red();
     }
 
-    // Simulated vehicle counts
-    lanes[0].setVehicleCount(3);
+    randomSeed(millis());
+
+    lanes[0].setVehicleCount(2);
     lanes[1].setVehicleCount(15);
     lanes[2].setVehicleCount(6);
     lanes[3].setVehicleCount(1);
 
     printStatus();
-    int bestLane = getHighestPriorityLane();
-
-    Serial.print("Best Lane = ");
-    Serial.println(bestLane);
 
     currentLane = getHighestPriorityLane();
-    lanes[currentLane].green();
+
+    lanes[currentLane].yellow();
+
+    currentState = PRE_GREEN_YELLOW_STATE;
+
+    stateDuration = 2000;
 
     previousMillis = millis();
-    Serial.println("Reached here");
 }
 
 void TrafficController::allRed()
@@ -78,14 +79,16 @@ void TrafficController::changeState()
 
     case ALL_RED_STATE:
 
-        updateWaitingTimes();
-        lanes[currentLane].removeVehicles(5);
-        simulateTraffic();
-        printStatus();
+        scheduleNextLane();
 
-        currentLane = getHighestPriorityLane();
-        Serial.print("Next Green Lane = ");
-        Serial.println(currentLane);
+        lanes[currentLane].yellow();
+
+        currentState = PRE_GREEN_YELLOW_STATE;
+
+        stateDuration = 2000;
+
+        break;
+    case PRE_GREEN_YELLOW_STATE:
 
         lanes[currentLane].green();
 
@@ -176,9 +179,46 @@ void TrafficController::updateWaitingTimes()
 }
 void TrafficController::simulateTraffic()
 {
-    for (int i = 0; i < 4; i++)
+    for(int i=0;i<4;i++)
     {
-        int newVehicles = random(0, 4);   // 0–3 new vehicles
+        int newVehicles = random(0,4);
+
         lanes[i].addVehicles(newVehicles);
     }
+}
+int TrafficController::getEmergencyLane()
+{
+    for(int i=0;i<4;i++)
+    {
+        if(lanes[i].isEmergency())
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+void TrafficController::scheduleNextLane()
+{
+    updateWaitingTimes();
+
+    lanes[currentLane].removeVehicles(3);
+
+    simulateTraffic();
+
+    int emergencyLane = getEmergencyLane();
+
+    if (emergencyLane != -1)
+    {
+        Serial.println();
+        Serial.println("***** EMERGENCY OVERRIDE *****");
+
+        currentLane = emergencyLane;
+    }
+    else
+    {
+        currentLane = getHighestPriorityLane();
+    }
+
+    printStatus();
 }
