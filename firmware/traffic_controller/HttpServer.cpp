@@ -1,4 +1,5 @@
 #include "HttpServer.h"
+#include <WiFi.h>
 
 HttpServer::HttpServer() : server(80)
 {
@@ -7,15 +8,12 @@ HttpServer::HttpServer() : server(80)
 
 void HttpServer::handleRoot()
 {
-
-
     server.send(
         200,
         "application/json",
-        "{\"project\":\"SmartTrafficAI\",\"version\":\"2.0\",\"status\":\"running\"}"
+        "{\"project\":\"SmartTrafficAI\",\"version\":\"2.3\",\"status\":\"running\"}"
     );
 }
-
 void HttpServer::handleStatus()
 {
     if (controller == nullptr)
@@ -42,11 +40,51 @@ void HttpServer::handleStatus()
 
     json += "\"signalState\":\"";
     json += status.signalState;
-    json += "\"";
+    json += "\",";
+
+    json += "\"wifi\":\"";
+    json += status.wifi;
+    json += "\",";
+
+    json += "\"rssi\":";
+    json += String(status.rssi);
+    json += ",";
+
+    json += "\"uptime\":";
+    json += String(status.uptime);
+    json += ",";
+
+    json += "\"lanes\":[";
+
+    for (int i = 0; i < 4; i++)
+    {
+        json += "{";
+
+        json += "\"name\":\"";
+        json += status.lanes[i].name;
+        json += "\",";
+
+        json += "\"vehicles\":";
+        json += String(status.lanes[i].vehicles);
+        json += ",";
+
+        json += "\"waiting\":";
+        json += String(status.lanes[i].waiting);
+        json += ",";
+                json += "\"priority\":";
+        json += String(status.lanes[i].priority, 1);
+
+        json += "}";
+
+        if (i < 3)
+        {
+            json += ",";
+        }
+    }
+
+    json += "]";
 
     json += "}";
-
-    // Enable CORS
 
     server.send(
         200,
@@ -57,8 +95,9 @@ void HttpServer::handleStatus()
 
 void HttpServer::begin(TrafficController* ctrl)
 {
-    server.enableCORS(true);
     controller = ctrl;
+
+    server.enableCORS(true);
 
     server.on(
         "/",
@@ -77,11 +116,13 @@ void HttpServer::begin(TrafficController* ctrl)
     server.begin();
 
     Serial.println();
-    Serial.println("=========================");
-    Serial.println("HTTP Server Running");
-    Serial.println("=========================");
+    Serial.println("==================================");
+    Serial.println(" SmartTrafficAI HTTP Server");
+    Serial.println("==================================");
+    Serial.print("Server Running : http://");
+    Serial.println(WiFi.localIP());
+    Serial.println();
 }
-
 void HttpServer::update()
 {
     server.handleClient();

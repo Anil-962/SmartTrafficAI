@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
 <meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>SmartTrafficAI Dashboard</title>
 
@@ -13,21 +15,83 @@
 
 <body>
 
-<h1>🚦 SmartTrafficAI Dashboard</h1>
+<div class="container">
 
-<div class="card">
+<header>
 
-<h2>Current Lane</h2>
+<h1>🚦 SmartTrafficAI</h1>
 
-<p id="lane">Loading...</p>
+<p>Adaptive Traffic Management System</p>
+
+</header>
+
+<div class="lane-grid">
+
+<div class="lane-card" id="lane0">
+
+<h2 id="name0">North</h2>
+
+<p>🚗 Vehicles : <span id="vehicles0">0</span></p>
+
+<p>⏱ Waiting : <span id="waiting0">0</span> sec</p>
+
+<p>⭐ Priority : <span id="priority0">0</span></p>
 
 </div>
 
-<div class="card">
+<div class="lane-card" id="lane1">
 
-<h2>Signal State</h2>
+<h2 id="name1">East</h2>
 
-<p id="state">Loading...</p>
+<p>🚗 Vehicles : <span id="vehicles1">0</span></p>
+
+<p>⏱ Waiting : <span id="waiting1">0</span> sec</p>
+
+<p>⭐ Priority : <span id="priority1">0</span></p>
+
+</div>
+
+<div class="lane-card" id="lane2">
+
+<h2 id="name2">South</h2>
+
+<p>🚗 Vehicles : <span id="vehicles2">0</span></p>
+
+<p>⏱ Waiting : <span id="waiting2">0</span> sec</p>
+
+<p>⭐ Priority : <span id="priority2">0</span></p>
+
+</div>
+
+<div class="lane-card" id="lane3">
+
+<h2 id="name3">West</h2>
+
+<p>🚗 Vehicles : <span id="vehicles3">0</span></p>
+
+<p>⏱ Waiting : <span id="waiting3">0</span> sec</p>
+
+<p>⭐ Priority : <span id="priority3">0</span></p>
+
+</div>
+
+</div>
+
+<div class="status-card">
+
+<h2>System Status</h2>
+
+<p>Current Lane : <span id="currentLane">-</span></p>
+
+<p>Signal State : <span id="signalState">-</span></p>
+
+<p>WiFi RSSI : <span id="rssi">-</span> dBm</p>
+
+<p>Uptime : <span id="uptime">0</span> sec</p>
+
+<p>Version : <span id="version">-</span></p>
+
+</div>
 
 </div>
 

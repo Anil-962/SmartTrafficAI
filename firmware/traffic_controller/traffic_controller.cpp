@@ -1,10 +1,7 @@
 #include <Arduino.h>
 #include "traffic_controller.h"
 #include "config.h"
-
-//====================================================
-// Constructor
-//====================================================
+#include <WiFi.h>
 
 TrafficController::TrafficController()
 {
@@ -19,17 +16,8 @@ TrafficController::TrafficController()
     previousMillis = 0;
     stateDuration = 2000;
 }
-
-//====================================================
-// Initialization
-//====================================================
-
 void TrafficController::begin()
 {
-    Serial.println("================================");
-    Serial.println("SmartTrafficAI Controller Started");
-    Serial.println("================================");
-
     randomSeed(millis());
 
     for (int i = 0; i < 4; i++)
@@ -57,10 +45,6 @@ void TrafficController::begin()
     printStatus();
 }
 
-//====================================================
-// All Signals RED
-//====================================================
-
 void TrafficController::allRed()
 {
     for (int i = 0; i < 4; i++)
@@ -68,10 +52,6 @@ void TrafficController::allRed()
         lanes[i].red();
     }
 }
-
-//====================================================
-// Round Robin (Testing)
-//====================================================
 
 void TrafficController::nextLane()
 {
@@ -82,11 +62,6 @@ void TrafficController::nextLane()
         currentLane = 0;
     }
 }
-
-//====================================================
-// FSM
-//====================================================
-
 void TrafficController::changeState()
 {
     switch (currentState)
@@ -137,10 +112,6 @@ void TrafficController::changeState()
     previousMillis = millis();
 }
 
-//====================================================
-// Update
-//====================================================
-
 void TrafficController::update()
 {
     if (millis() - previousMillis >= stateDuration)
@@ -154,14 +125,9 @@ void TrafficController::update()
         Serial.println(getCurrentStateName());
     }
 }
-//====================================================
-// Print Traffic Status
-//====================================================
 
 void TrafficController::printStatus()
 {
-    Serial.println("========== START ==========");
-
     const char *laneNames[4] =
     {
         "North",
@@ -189,14 +155,7 @@ void TrafficController::printStatus()
 
         Serial.println("----------------");
     }
-
-    Serial.println("=========== END ===========");
 }
-
-//====================================================
-// Highest Priority Lane
-//====================================================
-
 int TrafficController::getHighestPriorityLane()
 {
     int bestLane = 0;
@@ -216,11 +175,6 @@ int TrafficController::getHighestPriorityLane()
 
     return bestLane;
 }
-
-//====================================================
-// Waiting Time Update
-//====================================================
-
 void TrafficController::updateWaitingTimes()
 {
     for (int i = 0; i < 4; i++)
@@ -236,10 +190,6 @@ void TrafficController::updateWaitingTimes()
     }
 }
 
-//====================================================
-// Simulate Vehicles
-//====================================================
-
 void TrafficController::simulateTraffic()
 {
     for (int i = 0; i < 4; i++)
@@ -249,10 +199,6 @@ void TrafficController::simulateTraffic()
         lanes[i].addVehicles(newVehicles);
     }
 }
-
-//====================================================
-// Emergency Detection
-//====================================================
 
 int TrafficController::getEmergencyLane()
 {
@@ -266,11 +212,6 @@ int TrafficController::getEmergencyLane()
 
     return -1;
 }
-
-//====================================================
-// Adaptive Scheduler
-//====================================================
-
 void TrafficController::scheduleNextLane()
 {
     updateWaitingTimes();
@@ -294,11 +235,6 @@ void TrafficController::scheduleNextLane()
 
     printStatus();
 }
-
-//====================================================
-// Current Lane Name
-//====================================================
-
 String TrafficController::getCurrentLaneName()
 {
     switch (currentLane)
@@ -319,11 +255,6 @@ String TrafficController::getCurrentLaneName()
             return "Unknown";
     }
 }
-
-//====================================================
-// Current Signal State
-//====================================================
-
 String TrafficController::getCurrentStateName()
 {
     switch (currentState)
@@ -344,22 +275,21 @@ String TrafficController::getCurrentStateName()
             return "UNKNOWN";
     }
 }
-
-//====================================================
-// Status Object
-//====================================================
-
 TrafficStatus TrafficController::getStatus()
 {
     TrafficStatus status;
 
     status.project = "SmartTrafficAI";
-    status.version = "2.0";
+    status.version = "2.3";
 
     status.currentLane = getCurrentLaneName();
     status.signalState = getCurrentStateName();
 
-    const char *names[4] =
+    status.wifi = "Connected";
+    status.rssi = WiFi.RSSI();
+    status.uptime = millis() / 1000;
+
+    const char* names[4] =
     {
         "North",
         "East",
@@ -367,7 +297,7 @@ TrafficStatus TrafficController::getStatus()
         "West"
     };
 
-    for (int i = 0; i < 4; i++)
+    for(int i=0;i<4;i++)
     {
         status.lanes[i].name = names[i];
         status.lanes[i].vehicles = lanes[i].getVehicleCount();
@@ -376,23 +306,4 @@ TrafficStatus TrafficController::getStatus()
     }
 
     return status;
-}
-
-//====================================================
-// Helper Functions
-//====================================================
-
-int TrafficController::getCurrentLane()
-{
-    return currentLane;
-}
-
-SignalState TrafficController::getCurrentState()
-{
-    return currentState;
-}
-
-Lane *TrafficController::getLanes()
-{
-    return lanes;
 }

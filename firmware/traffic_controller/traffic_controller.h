@@ -28,8 +28,6 @@ private:
 
     SignalState getCurrentState();
 
-    Lane* getLanes();
-
     void changeState();
 
     void updateWaitingTimes();

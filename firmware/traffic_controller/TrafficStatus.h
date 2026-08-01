@@ -19,6 +19,10 @@ struct TrafficStatus
     String currentLane;
     String signalState;
 
+    String wifi;
+    int rssi;
+    unsigned long uptime;
+
     LaneStatus lanes[4];
 };
 
