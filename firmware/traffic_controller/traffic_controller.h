@@ -23,6 +23,11 @@ private:
 
     unsigned long previousMillis;
     unsigned long stateDuration;
+    int getCurrentLane();
+
+    SignalState getCurrentState();
+
+    Lane* getLanes();
 
     void changeState();
 
