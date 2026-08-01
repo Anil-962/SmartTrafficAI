@@ -1,5 +1,6 @@
 #ifndef TRAFFIC_CONTROLLER_H
 #define TRAFFIC_CONTROLLER_H
+#include "TrafficStatus.h"
 
 #include "lane.h"
 
@@ -43,11 +44,17 @@ private:
 
     void allRed();
 
-    void nextLane();      // keep for testing/debugging
+    void nextLane();    
+      // keep for testing/debugging
 
 public:
 
     TrafficController();
+    TrafficStatus getStatus();
+
+    String getCurrentLaneName();
+
+    String getCurrentStateName();
 
     void begin();
 

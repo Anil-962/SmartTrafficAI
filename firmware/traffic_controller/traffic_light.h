@@ -1,6 +1,8 @@
 #ifndef TRAFFIC_LIGHT_H
 #define TRAFFIC_LIGHT_H
 
+#include <Arduino.h>
+
 class TrafficLight
 {
 private:
@@ -9,18 +11,26 @@ private:
     int greenPin;
 
 public:
-    // Default constructor
+    // Constructors
     TrafficLight();
-
-    // Parameterized constructor
     TrafficLight(int red, int yellow, int green);
 
+    // Initialization
     void begin();
 
+    // Signal Control
     void red();
     void yellow();
     void green();
     void off();
+
+    // Utility
+    bool isValid() const;
+
+    // Getters
+    int getRedPin() const;
+    int getYellowPin() const;
+    int getGreenPin() const;
 };
 
 #endif

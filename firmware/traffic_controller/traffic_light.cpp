@@ -1,7 +1,9 @@
-#include <Arduino.h>
 #include "traffic_light.h"
 
-// Default constructor
+//--------------------------------------------------
+// Constructors
+//--------------------------------------------------
+
 TrafficLight::TrafficLight()
 {
     redPin = -1;
@@ -9,7 +11,6 @@ TrafficLight::TrafficLight()
     greenPin = -1;
 }
 
-// Parameterized constructor
 TrafficLight::TrafficLight(int red, int yellow, int green)
 {
     redPin = red;
@@ -17,9 +18,14 @@ TrafficLight::TrafficLight(int red, int yellow, int green)
     greenPin = green;
 }
 
+//--------------------------------------------------
+// Initialization
+//--------------------------------------------------
+
 void TrafficLight::begin()
 {
-    if (redPin == -1) return;
+    if (!isValid())
+        return;
 
     pinMode(redPin, OUTPUT);
     pinMode(yellowPin, OUTPUT);
@@ -28,8 +34,15 @@ void TrafficLight::begin()
     off();
 }
 
+//--------------------------------------------------
+// States
+//--------------------------------------------------
+
 void TrafficLight::red()
 {
+    if (!isValid())
+        return;
+
     digitalWrite(redPin, HIGH);
     digitalWrite(yellowPin, LOW);
     digitalWrite(greenPin, LOW);
@@ -37,6 +50,9 @@ void TrafficLight::red()
 
 void TrafficLight::yellow()
 {
+    if (!isValid())
+        return;
+
     digitalWrite(redPin, LOW);
     digitalWrite(yellowPin, HIGH);
     digitalWrite(greenPin, LOW);
@@ -44,6 +60,9 @@ void TrafficLight::yellow()
 
 void TrafficLight::green()
 {
+    if (!isValid())
+        return;
+
     digitalWrite(redPin, LOW);
     digitalWrite(yellowPin, LOW);
     digitalWrite(greenPin, HIGH);
@@ -51,7 +70,40 @@ void TrafficLight::green()
 
 void TrafficLight::off()
 {
+    if (!isValid())
+        return;
+
     digitalWrite(redPin, LOW);
     digitalWrite(yellowPin, LOW);
     digitalWrite(greenPin, LOW);
+}
+
+//--------------------------------------------------
+// Utilities
+//--------------------------------------------------
+
+bool TrafficLight::isValid() const
+{
+    return (redPin >= 0 &&
+            yellowPin >= 0 &&
+            greenPin >= 0);
+}
+
+//--------------------------------------------------
+// Getters
+//--------------------------------------------------
+
+int TrafficLight::getRedPin() const
+{
+    return redPin;
+}
+
+int TrafficLight::getYellowPin() const
+{
+    return yellowPin;
+}
+
+int TrafficLight::getGreenPin() const
+{
+    return greenPin;
 }

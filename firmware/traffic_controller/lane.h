@@ -7,6 +7,7 @@ class Lane
 {
 private:
     TrafficLight signal;
+    
 
     int vehicleCount;
     int waitingTime;
@@ -29,6 +30,11 @@ public:
     void clearVehicles();
     void removeVehicles(int count);
     void addVehicles(int count);
+    int getRedPin();
+
+    int getYellowPin();
+
+    int getGreenPin();
 
     // Vehicle count
     void setVehicleCount(int count);
