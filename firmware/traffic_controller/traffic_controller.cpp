@@ -190,7 +190,7 @@ void TrafficController::updateWaitingTimes()
     }
 }
 
-void TrafficController::simulateTraffic()
+/*void TrafficController::simulateTraffic()
 {
     for (int i = 0; i < 4; i++)
     {
@@ -199,7 +199,7 @@ void TrafficController::simulateTraffic()
         lanes[i].addVehicles(newVehicles);
     }
 }
-
+*/
 int TrafficController::getEmergencyLane()
 {
     for (int i = 0; i < 4; i++)
@@ -218,7 +218,7 @@ void TrafficController::scheduleNextLane()
 
     lanes[currentLane].removeVehicles(3);
 
-    simulateTraffic();
+    //simulateTraffic();
 
     int emergencyLane = getEmergencyLane();
 
@@ -306,4 +306,58 @@ TrafficStatus TrafficController::getStatus()
     }
 
     return status;
+}
+
+void TrafficController::updateSensorData(float north,
+                                         float east,
+                                         float south,
+                                         float west)
+{
+    // Convert distance to vehicle count
+    // (Closer object = More vehicles)
+
+    auto distanceToVehicles = [](float distance) -> int
+    {
+        if(distance < 0)
+            return 0;
+
+        if(distance <= 10)
+            return 10;
+
+        if(distance <= 20)
+            return 8;
+
+        if(distance <= 30)
+            return 6;
+
+        if(distance <= 40)
+            return 4;
+
+        if(distance <= 60)
+            return 2;
+
+        return 0;
+    };
+
+    lanes[0].setVehicleCount(distanceToVehicles(north));
+    lanes[1].setVehicleCount(distanceToVehicles(east));
+    lanes[2].setVehicleCount(distanceToVehicles(south));
+    lanes[3].setVehicleCount(distanceToVehicles(west));
+
+    Serial.println();
+    Serial.println("========== SENSOR UPDATE ==========");
+
+    Serial.print("North : ");
+    Serial.println(lanes[0].getVehicleCount());
+
+    Serial.print("East  : ");
+    Serial.println(lanes[1].getVehicleCount());
+
+    Serial.print("South : ");
+    Serial.println(lanes[2].getVehicleCount());
+
+    Serial.print("West  : ");
+    Serial.println(lanes[3].getVehicleCount());
+
+    Serial.println("===================================");
 }

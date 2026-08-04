@@ -1,17 +1,39 @@
 #ifndef TRAFFIC_CONTROLLER_H
 #define TRAFFIC_CONTROLLER_H
-#include "TrafficStatus.h"
 
-#include "lane.h"
-
-enum SignalState
+#include <Arduino.h>
+#include "Lane.h"
+enum TrafficState
 {
+    PRE_GREEN_YELLOW_STATE,
     GREEN_STATE,
     YELLOW_STATE,
-    ALL_RED_STATE,
-    PRE_GREEN_YELLOW_STATE
+    ALL_RED_STATE
 };
 
+struct LaneStatus
+{
+    String name;
+    int vehicles;
+    int waiting;
+    float priority;
+};
+
+struct TrafficStatus
+{
+    String project;
+    String version;
+
+    String currentLane;
+    String signalState;
+
+    String wifi;
+
+    int rssi;
+    unsigned long uptime;
+
+    LaneStatus lanes[4];
+};
 class TrafficController
 {
 private:
@@ -19,46 +41,50 @@ private:
     Lane lanes[4];
 
     int currentLane;
-
-    SignalState currentState;
+    int currentState;
 
     unsigned long previousMillis;
     unsigned long stateDuration;
-    int getCurrentLane();
-
-    SignalState getCurrentState();
-
     void changeState();
+
+    void allRed();
+
+    void nextLane();
+
+    void scheduleNextLane();
 
     void updateWaitingTimes();
 
     void simulateTraffic();
 
-    void scheduleNextLane();
+    void printStatus();
 
     int getHighestPriorityLane();
 
     int getEmergencyLane();
 
-    void allRed();
-
-    void nextLane();    
-      // keep for testing/debugging
-
-public:
-
-    TrafficController();
-    TrafficStatus getStatus();
-
     String getCurrentLaneName();
 
     String getCurrentStateName();
 
+public:
+    TrafficController();
     void begin();
 
     void update();
 
-    void printStatus();
+    TrafficStatus getStatus();
+
+    Lane* getLanes();
+
+    int getCurrentLane();
+
+    String getSignalState();
+
+    void updateSensorData(float north,
+                          float east,
+                          float south,
+                          float west);
 };
 
 #endif

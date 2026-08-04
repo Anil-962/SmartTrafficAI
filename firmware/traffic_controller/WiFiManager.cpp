@@ -7,7 +7,6 @@ void WiFiManager::begin()
     Serial.println("=========================");
     Serial.println("Connecting to WiFi...");
     Serial.println("=========================");
-
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 

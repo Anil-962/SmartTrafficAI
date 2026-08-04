@@ -1,4 +1,4 @@
-const url = "http://192.168.137.68/status";
+const url = "http://192.168.137.190/status";
 
 async function updateDashboard()
 {
