@@ -12,18 +12,18 @@ private:
     WebServer server;
 
     TrafficController* controller;
-
-    // Existing Endpoints
     void handleRoot();
+
     void handleStatus();
 
-    // New Endpoint
     void handleSensor();
 
+    void handleEmergency();
+
+    void handleClearEmergency();
+
 public:
-
     HttpServer();
-
     void begin(TrafficController* ctrl);
 
     void update();

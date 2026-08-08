@@ -1,4 +1,5 @@
 #include "HttpServer.h"
+
 #include <WiFi.h>
 #include <ArduinoJson.h>
 
@@ -6,13 +7,12 @@ HttpServer::HttpServer() : server(80)
 {
     controller = nullptr;
 }
-
 void HttpServer::handleRoot()
 {
     server.send(
         200,
         "application/json",
-        "{\"project\":\"SmartTrafficAI\",\"version\":\"2.4\",\"status\":\"running\"}"
+        "{\"project\":\"SmartTrafficAI\",\"version\":\"3.1\",\"status\":\"running\"}"
     );
 }
 
@@ -31,7 +31,7 @@ void HttpServer::handleStatus()
 
     TrafficStatus status = controller->getStatus();
 
-    StaticJsonDocument<1024> doc;
+    StaticJsonDocument<1536> doc;
 
     doc["project"] = status.project;
     doc["version"] = status.version;
@@ -51,6 +51,7 @@ void HttpServer::handleStatus()
         lane["vehicles"] = status.lanes[i].vehicles;
         lane["waiting"] = status.lanes[i].waiting;
         lane["priority"] = status.lanes[i].priority;
+        lane["emergency"] = status.lanes[i].emergency;
     }
 
     String json;
@@ -63,6 +64,7 @@ void HttpServer::handleStatus()
         json
     );
 }
+
 void HttpServer::handleSensor()
 {
     if (controller == nullptr)
@@ -76,7 +78,6 @@ void HttpServer::handleSensor()
         return;
     }
 
-    // Check whether JSON body exists
     if (!server.hasArg("plain"))
     {
         Serial.println("ERROR: No JSON body received");
@@ -90,7 +91,6 @@ void HttpServer::handleSensor()
         return;
     }
 
-    // Get JSON body
     String body = server.arg("plain");
 
     Serial.println();
@@ -101,7 +101,6 @@ void HttpServer::handleSensor()
     Serial.print("JSON : ");
     Serial.println(body);
 
-    // Parse JSON
     StaticJsonDocument<256> doc;
 
     DeserializationError error =
@@ -121,13 +120,11 @@ void HttpServer::handleSensor()
         return;
     }
 
-    // Read sensor values
     float north = doc["north"] | -1.0;
     float east  = doc["east"]  | -1.0;
     float south = doc["south"] | -1.0;
     float west  = doc["west"]  | -1.0;
 
-    // Display values
     Serial.println();
     Serial.println("Sensor Distances:");
 
@@ -143,7 +140,6 @@ void HttpServer::handleSensor()
     Serial.print("West  : ");
     Serial.println(west);
 
-    // Update traffic controller
     controller->updateSensorData(
         north,
         east,
@@ -151,7 +147,6 @@ void HttpServer::handleSensor()
         west
     );
 
-    // Send successful response
     server.send(
         200,
         "text/plain",
@@ -163,11 +158,209 @@ void HttpServer::handleSensor()
     Serial.println("HTTP Response : 200 OK");
     Serial.println("========================================");
 }
+
+// =====================================================
+// EMERGENCY
+// POST /emergency
+//
+// JSON:
+// {
+//     "lane": 2
+// }
+//
+// 0 = North
+// 1 = East
+// 2 = South
+// 3 = West
+// =====================================================
+
+void HttpServer::handleEmergency()
+{
+    if (controller == nullptr)
+    {
+        server.send(
+            500,
+            "text/plain",
+            "Controller Missing"
+        );
+
+        return;
+    }
+
+    if (!server.hasArg("plain"))
+    {
+        server.send(
+            400,
+            "text/plain",
+            "Missing JSON"
+        );
+
+        return;
+    }
+
+    String body = server.arg("plain");
+
+    Serial.println();
+    Serial.println("========================================");
+    Serial.println("       EMERGENCY REQUEST RECEIVED");
+    Serial.println("========================================");
+
+    Serial.print("JSON : ");
+    Serial.println(body);
+
+    StaticJsonDocument<256> doc;
+
+    DeserializationError error =
+        deserializeJson(doc, body);
+
+    if (error)
+    {
+        Serial.print("JSON Parse Error : ");
+        Serial.println(error.c_str());
+
+        server.send(
+            400,
+            "text/plain",
+            "Invalid JSON"
+        );
+
+        return;
+    }
+
+    if (!doc.containsKey("lane"))
+    {
+        server.send(
+            400,
+            "text/plain",
+            "Missing lane"
+        );
+
+        return;
+    }
+
+    int lane = doc["lane"];
+
+    if (lane < 0 || lane > 3)
+    {
+        server.send(
+            400,
+            "text/plain",
+            "Invalid lane. Use 0-3"
+        );
+
+        return;
+    }
+
+    controller->setEmergencyLane(lane);
+
+    server.send(
+        200,
+        "application/json",
+        "{\"status\":\"emergency_set\",\"success\":true}"
+    );
+
+    Serial.println("Emergency lane set successfully");
+    Serial.println("HTTP Response : 200 OK");
+    Serial.println("========================================");
+}
+
+// =====================================================
+// CLEAR EMERGENCY
+// POST /clear-emergency
+//
+// JSON:
+// {
+//     "lane": 2
+// }
+//
+// If lane is omitted, all emergencies are cleared.
+// =====================================================
+
+void HttpServer::handleClearEmergency()
+{
+    if (controller == nullptr)
+    {
+        server.send(
+            500,
+            "text/plain",
+            "Controller Missing"
+        );
+
+        return;
+    }
+
+    if (!server.hasArg("plain"))
+    {
+        controller->clearAllEmergency();
+
+        server.send(
+            200,
+            "application/json",
+            "{\"status\":\"all_emergency_cleared\",\"success\":true}"
+        );
+
+        return;
+    }
+
+    String body = server.arg("plain");
+
+    StaticJsonDocument<256> doc;
+
+    DeserializationError error =
+        deserializeJson(doc, body);
+
+    if (error)
+    {
+        server.send(
+            400,
+            "text/plain",
+            "Invalid JSON"
+        );
+
+        return;
+    }
+
+    if (!doc.containsKey("lane"))
+    {
+        controller->clearAllEmergency();
+
+        server.send(
+            200,
+            "application/json",
+            "{\"status\":\"all_emergency_cleared\",\"success\":true}"
+        );
+
+        return;
+    }
+
+    int lane = doc["lane"];
+
+    if (lane < 0 || lane > 3)
+    {
+        server.send(
+            400,
+            "text/plain",
+            "Invalid lane. Use 0-3"
+        );
+
+        return;
+    }
+
+    controller->clearEmergencyLane(lane);
+
+    server.send(
+        200,
+        "application/json",
+        "{\"status\":\"emergency_cleared\",\"success\":true}"
+    );
+
+    Serial.print("Emergency cleared for lane : ");
+    Serial.println(lane);
+}
 void HttpServer::begin(TrafficController* ctrl)
 {
     controller = ctrl;
 
-    // Enable CORS for dashboard
     server.enableCORS(true);
     server.on(
         "/",
@@ -194,7 +387,25 @@ void HttpServer::begin(TrafficController* ctrl)
         )
     );
 
-    // Start HTTP server
+    server.on(
+        "/emergency",
+        HTTP_POST,
+        std::bind(
+            &HttpServer::handleEmergency,
+            this
+        )
+    );
+
+    server.on(
+        "/clear-emergency",
+        HTTP_POST,
+        std::bind(
+            &HttpServer::handleClearEmergency,
+            this
+        )
+    );
+
+    // Start server
     server.begin();
 
     Serial.println();
@@ -210,9 +421,12 @@ void HttpServer::begin(TrafficController* ctrl)
     Serial.println("GET  /");
     Serial.println("GET  /status");
     Serial.println("POST /sensor");
+    Serial.println("POST /emergency");
+    Serial.println("POST /clear-emergency");
 
     Serial.println("==================================");
 }
+
 void HttpServer::update()
 {
     server.handleClient();

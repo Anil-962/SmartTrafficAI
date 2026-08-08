@@ -17,8 +17,8 @@ struct LaneStatus
     int vehicles;
     int waiting;
     float priority;
+    bool emergency;
 };
-
 struct TrafficStatus
 {
     String project;
@@ -34,6 +34,7 @@ struct TrafficStatus
 
     LaneStatus lanes[4];
 };
+
 class TrafficController
 {
 private:
@@ -45,6 +46,10 @@ private:
 
     unsigned long previousMillis;
     unsigned long stateDuration;
+
+    // Emergency status for each lane
+    bool emergency[4];
+
     void changeState();
 
     void allRed();
@@ -80,11 +85,19 @@ public:
     int getCurrentLane();
 
     String getSignalState();
+    void updateSensorData(
+        float north,
+        float east,
+        float south,
+        float west
+    );
+    void setEmergencyLane(int lane);
 
-    void updateSensorData(float north,
-                          float east,
-                          float south,
-                          float west);
+    void clearEmergencyLane(int lane);
+
+    void clearAllEmergency();
+
+    bool isEmergencyLane(int lane);
 };
 
 #endif

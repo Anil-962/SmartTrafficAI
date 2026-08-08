@@ -15,7 +15,14 @@ TrafficController::TrafficController()
 
     previousMillis = 0;
     stateDuration = 2000;
+
+    // No emergency vehicles at startup
+    for (int i = 0; i < 4; i++)
+    {
+        emergency[i] = false;
+    }
 }
+
 void TrafficController::begin()
 {
     randomSeed(millis());
@@ -25,12 +32,13 @@ void TrafficController::begin()
         lanes[i].begin();
         lanes[i].red();
     }
-
-    // Demo traffic values
     lanes[0].setVehicleCount(10);
     lanes[1].setVehicleCount(2);
     lanes[2].setVehicleCount(6);
     lanes[3].setVehicleCount(1);
+
+    // Make sure emergency state starts clear
+    clearAllEmergency();
 
     currentLane = getHighestPriorityLane();
 
@@ -62,6 +70,7 @@ void TrafficController::nextLane()
         currentLane = 0;
     }
 }
+
 void TrafficController::changeState()
 {
     switch (currentState)
@@ -125,7 +134,6 @@ void TrafficController::update()
         Serial.println(getCurrentStateName());
     }
 }
-
 void TrafficController::printStatus()
 {
     const char *laneNames[4] =
@@ -153,9 +161,13 @@ void TrafficController::printStatus()
         Serial.print("Priority = ");
         Serial.println(lanes[i].getPriorityScore());
 
+        Serial.print("Emergency = ");
+        Serial.println(emergency[i] ? "YES" : "NO");
+
         Serial.println("----------------");
     }
 }
+
 int TrafficController::getHighestPriorityLane()
 {
     int bestLane = 0;
@@ -175,6 +187,7 @@ int TrafficController::getHighestPriorityLane()
 
     return bestLane;
 }
+
 void TrafficController::updateWaitingTimes()
 {
     for (int i = 0; i < 4; i++)
@@ -190,18 +203,18 @@ void TrafficController::updateWaitingTimes()
     }
 }
 
-/*void TrafficController::simulateTraffic()
-{
-    for (int i = 0; i < 4; i++)
-    {
-        int newVehicles = random(0, 4);
-
-        lanes[i].addVehicles(newVehicles);
-    }
-}
-*/
 int TrafficController::getEmergencyLane()
 {
+    // Check our emergency flags first
+    for (int i = 0; i < 4; i++)
+    {
+        if (emergency[i])
+        {
+            return i;
+        }
+    }
+
+    // Also preserve existing Lane emergency support
     for (int i = 0; i < 4; i++)
     {
         if (lanes[i].isEmergency())
@@ -212,29 +225,33 @@ int TrafficController::getEmergencyLane()
 
     return -1;
 }
+
 void TrafficController::scheduleNextLane()
 {
     updateWaitingTimes();
 
+    // Remove vehicles that passed through current lane
     lanes[currentLane].removeVehicles(3);
-
-    //simulateTraffic();
-
     int emergencyLane = getEmergencyLane();
 
     if (emergencyLane != -1)
     {
         currentLane = emergencyLane;
 
-        Serial.println("Emergency Vehicle Detected");
+        Serial.println();
+        Serial.println(" EMERGENCY VEHICLE PRIORITY");
+        Serial.print("Emergency Lane : ");
+        Serial.println(getCurrentLaneName());
     }
     else
     {
+        // Normal adaptive priority
         currentLane = getHighestPriorityLane();
     }
 
     printStatus();
 }
+
 String TrafficController::getCurrentLaneName()
 {
     switch (currentLane)
@@ -280,7 +297,7 @@ TrafficStatus TrafficController::getStatus()
     TrafficStatus status;
 
     status.project = "SmartTrafficAI";
-    status.version = "2.3";
+    status.version = "3.1";
 
     status.currentLane = getCurrentLaneName();
     status.signalState = getCurrentStateName();
@@ -297,52 +314,69 @@ TrafficStatus TrafficController::getStatus()
         "West"
     };
 
-    for(int i=0;i<4;i++)
+    for (int i = 0; i < 4; i++)
     {
         status.lanes[i].name = names[i];
-        status.lanes[i].vehicles = lanes[i].getVehicleCount();
-        status.lanes[i].waiting = lanes[i].getWaitingTime();
-        status.lanes[i].priority = lanes[i].getPriorityScore();
+
+        status.lanes[i].vehicles =
+            lanes[i].getVehicleCount();
+
+        status.lanes[i].waiting =
+            lanes[i].getWaitingTime();
+
+        status.lanes[i].priority =
+            lanes[i].getPriorityScore();
+
+        status.lanes[i].emergency =
+            emergency[i] || lanes[i].isEmergency();
     }
 
     return status;
 }
-
-void TrafficController::updateSensorData(float north,
-                                         float east,
-                                         float south,
-                                         float west)
+void TrafficController::updateSensorData(
+    float north,
+    float east,
+    float south,
+    float west)
 {
-    // Convert distance to vehicle count
-    // (Closer object = More vehicles)
-
     auto distanceToVehicles = [](float distance) -> int
     {
-        if(distance < 0)
+        if (distance < 0)
             return 0;
 
-        if(distance <= 10)
+        if (distance <= 10)
             return 10;
 
-        if(distance <= 20)
+        if (distance <= 20)
             return 8;
 
-        if(distance <= 30)
+        if (distance <= 30)
             return 6;
 
-        if(distance <= 40)
+        if (distance <= 40)
             return 4;
 
-        if(distance <= 60)
+        if (distance <= 60)
             return 2;
 
         return 0;
     };
 
-    lanes[0].setVehicleCount(distanceToVehicles(north));
-    lanes[1].setVehicleCount(distanceToVehicles(east));
-    lanes[2].setVehicleCount(distanceToVehicles(south));
-    lanes[3].setVehicleCount(distanceToVehicles(west));
+    lanes[0].setVehicleCount(
+        distanceToVehicles(north)
+    );
+
+    lanes[1].setVehicleCount(
+        distanceToVehicles(east)
+    );
+
+    lanes[2].setVehicleCount(
+        distanceToVehicles(south)
+    );
+
+    lanes[3].setVehicleCount(
+        distanceToVehicles(west)
+    );
 
     Serial.println();
     Serial.println("========== SENSOR UPDATE ==========");
@@ -359,5 +393,96 @@ void TrafficController::updateSensorData(float north,
     Serial.print("West  : ");
     Serial.println(lanes[3].getVehicleCount());
 
-    Serial.println("===================================");
+}
+void TrafficController::setEmergencyLane(int lane)
+{
+    if (lane < 0 || lane >= 4)
+    {
+        Serial.println("Invalid emergency lane");
+
+        return;
+    }
+
+    // Clear all other emergency flags
+    for (int i = 0; i < 4; i++)
+    {
+        emergency[i] = false;
+    }
+
+    emergency[lane] = true;
+
+    Serial.println();
+    Serial.println("==================================");
+    Serial.println(" EMERGENCY VEHICLE DETECTED");
+    Serial.println("==================================");
+
+    Serial.print("Emergency Lane : ");
+
+    switch (lane)
+    {
+        case 0:
+            Serial.println("North");
+            break;
+
+        case 1:
+            Serial.println("East");
+            break;
+
+        case 2:
+            Serial.println("South");
+            break;
+
+        case 3:
+            Serial.println("West");
+            break;
+    }
+
+    Serial.println("==================================");
+}
+void TrafficController::clearEmergencyLane(int lane)
+{
+    if (lane < 0 || lane >= 4)
+    {
+        return;
+    }
+
+    emergency[lane] = false;
+
+    Serial.print("Emergency cleared for lane : ");
+
+    switch (lane)
+    {
+        case 0:
+            Serial.println("North");
+            break;
+
+        case 1:
+            Serial.println("East");
+            break;
+
+        case 2:
+            Serial.println("South");
+            break;
+
+        case 3:
+            Serial.println("West");
+            break;
+    }
+}
+void TrafficController::clearAllEmergency()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        emergency[i] = false;
+    }
+}
+
+bool TrafficController::isEmergencyLane(int lane)
+{
+    if (lane < 0 || lane >= 4)
+    {
+        return false;
+    }
+
+    return emergency[lane];
 }
