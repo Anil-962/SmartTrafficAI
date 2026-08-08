@@ -1,11 +1,12 @@
 #include "HttpServer.h"
-
 #include <WiFi.h>
 #include <ArduinoJson.h>
+
 HttpServer::HttpServer() : server(80)
 {
     controller = nullptr;
 }
+
 void HttpServer::handleRoot()
 {
     server.send(
@@ -14,13 +15,17 @@ void HttpServer::handleRoot()
         "{\"project\":\"SmartTrafficAI\",\"version\":\"2.4\",\"status\":\"running\"}"
     );
 }
+
 void HttpServer::handleStatus()
 {
-    if(controller == nullptr)
+    if (controller == nullptr)
     {
-        server.send(500,
-                    "text/plain",
-                    "Controller Missing");
+        server.send(
+            500,
+            "text/plain",
+            "Controller Missing"
+        );
+
         return;
     }
 
@@ -38,7 +43,7 @@ void HttpServer::handleStatus()
 
     JsonArray lanes = doc.createNestedArray("lanes");
 
-    for(int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++)
     {
         JsonObject lane = lanes.createNestedObject();
 
@@ -49,59 +54,96 @@ void HttpServer::handleStatus()
     }
 
     String json;
+
     serializeJson(doc, json);
 
-    server.send(200,
-                "application/json",
-                json);
+    server.send(
+        200,
+        "application/json",
+        json
+    );
 }
-
 void HttpServer::handleSensor()
 {
-    if(controller == nullptr)
+    if (controller == nullptr)
     {
-        server.send(500,
-                    "text/plain",
-                    "Controller Missing");
-        return;
-    }
-
-    if(!server.hasArg("plain"))
-    {
-        server.send(400,
-                    "text/plain",
-                    "Missing JSON");
+        server.send(
+            500,
+            "text/plain",
+            "Controller Missing"
+        );
 
         return;
     }
 
+    // Check whether JSON body exists
+    if (!server.hasArg("plain"))
+    {
+        Serial.println("ERROR: No JSON body received");
+
+        server.send(
+            400,
+            "text/plain",
+            "Missing JSON"
+        );
+
+        return;
+    }
+
+    // Get JSON body
     String body = server.arg("plain");
 
     Serial.println();
-    Serial.println("========== SENSOR DATA ==========");
+    Serial.println("========================================");
+    Serial.println("         SENSOR DATA RECEIVED");
+    Serial.println("========================================");
+
+    Serial.print("JSON : ");
     Serial.println(body);
 
+    // Parse JSON
     StaticJsonDocument<256> doc;
 
     DeserializationError error =
         deserializeJson(doc, body);
 
-    if(error)
+    if (error)
     {
-        Serial.println("Invalid JSON");
+        Serial.print("JSON Parse Error : ");
+        Serial.println(error.c_str());
 
-        server.send(400,
-                    "text/plain",
-                    "Invalid JSON");
+        server.send(
+            400,
+            "text/plain",
+            "Invalid JSON"
+        );
 
         return;
     }
 
-    float north = doc["north"] | -1;
-    float east  = doc["east"]  | -1;
-    float south = doc["south"] | -1;
-    float west  = doc["west"]  | -1;
+    // Read sensor values
+    float north = doc["north"] | -1.0;
+    float east  = doc["east"]  | -1.0;
+    float south = doc["south"] | -1.0;
+    float west  = doc["west"]  | -1.0;
 
+    // Display values
+    Serial.println();
+    Serial.println("Sensor Distances:");
+
+    Serial.print("North : ");
+    Serial.println(north);
+
+    Serial.print("East  : ");
+    Serial.println(east);
+
+    Serial.print("South : ");
+    Serial.println(south);
+
+    Serial.print("West  : ");
+    Serial.println(west);
+
+    // Update traffic controller
     controller->updateSensorData(
         north,
         east,
@@ -109,45 +151,68 @@ void HttpServer::handleSensor()
         west
     );
 
-    server.send(200,
-                "text/plain",
-                "OK");
+    // Send successful response
+    server.send(
+        200,
+        "text/plain",
+        "OK"
+    );
 
-    Serial.println("Sensor Data Updated");
+    Serial.println();
+    Serial.println("Sensor Data Updated Successfully");
+    Serial.println("HTTP Response : 200 OK");
+    Serial.println("========================================");
 }
-
 void HttpServer::begin(TrafficController* ctrl)
 {
     controller = ctrl;
 
+    // Enable CORS for dashboard
     server.enableCORS(true);
+    server.on(
+        "/",
+        HTTP_GET,
+        std::bind(
+            &HttpServer::handleRoot,
+            this
+        )
+    );
+    server.on(
+        "/status",
+        HTTP_GET,
+        std::bind(
+            &HttpServer::handleStatus,
+            this
+        )
+    );
+    server.on(
+        "/sensor",
+        HTTP_POST,
+        std::bind(
+            &HttpServer::handleSensor,
+            this
+        )
+    );
 
-    server.on("/",
-              HTTP_GET,
-              std::bind(&HttpServer::handleRoot,
-                        this));
-
-    server.on("/status",
-              HTTP_GET,
-              std::bind(&HttpServer::handleStatus,
-                        this));
-
-    server.on("/sensor",
-              HTTP_POST,
-              std::bind(&HttpServer::handleSensor,
-                        this));
-
+    // Start HTTP server
     server.begin();
 
     Serial.println();
     Serial.println("==================================");
     Serial.println(" SmartTrafficAI HTTP Server");
     Serial.println("==================================");
+
     Serial.print("Server Running : http://");
     Serial.println(WiFi.localIP());
+
+    Serial.println();
+    Serial.println("Available Endpoints:");
+    Serial.println("GET  /");
+    Serial.println("GET  /status");
+    Serial.println("POST /sensor");
+
     Serial.println("==================================");
 }
-
 void HttpServer::update()
 {
     server.handleClient();
