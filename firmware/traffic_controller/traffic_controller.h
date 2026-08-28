@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "Lane.h"
+
 enum TrafficState
 {
     PRE_GREEN_YELLOW_STATE,
@@ -14,11 +15,15 @@ enum TrafficState
 struct LaneStatus
 {
     String name;
+
     int vehicles;
     int waiting;
+
     float priority;
+
     bool emergency;
 };
+
 struct TrafficStatus
 {
     String project;
@@ -30,6 +35,7 @@ struct TrafficStatus
     String wifi;
 
     int rssi;
+
     unsigned long uptime;
 
     LaneStatus lanes[4];
@@ -46,9 +52,20 @@ private:
 
     unsigned long previousMillis;
     unsigned long stateDuration;
+    int densityLevel[4];
 
-    // Emergency status for each lane
     bool emergency[4];
+
+    float filteredDistance[4];
+
+    int invalidReadings[4];
+
+    bool sensorInitialized[4];
+
+    static constexpr float FILTER_ALPHA = 0.40f;
+
+    static constexpr int MAX_INVALID_READINGS = 3;
+
 
     void changeState();
 
@@ -72,8 +89,23 @@ private:
 
     String getCurrentStateName();
 
+    float calibrateDistance(
+        int lane,
+        float rawDistance
+    );
+    int getStableDensity(
+    int lane,
+    float distance
+    );
+    int distanceToVehicles(
+        float distance
+    );
+
 public:
+
+  
     TrafficController();
+
     void begin();
 
     void update();

@@ -16,12 +16,33 @@ TrafficController::TrafficController()
     previousMillis = 0;
     stateDuration = 2000;
 
-    // No emergency vehicles at startup
+    // -------------------------------------------------
+    // Emergency
+    // -------------------------------------------------
+
     for (int i = 0; i < 4; i++)
     {
         emergency[i] = false;
     }
+
+    // -------------------------------------------------
+    // Sensor Calibration
+    // -------------------------------------------------
+
+    for (int i = 0; i < 4; i++)
+    {
+        filteredDistance[i] = -1.0;
+
+        invalidReadings[i] = 0;
+
+        sensorInitialized[i] = false;
+        densityLevel[i] = 0;
+    }
 }
+
+// =====================================================
+// Begin
+// =====================================================
 
 void TrafficController::begin()
 {
@@ -32,13 +53,39 @@ void TrafficController::begin()
         lanes[i].begin();
         lanes[i].red();
     }
+
+    // -------------------------------------------------
+    // Initial demo values
+    // -------------------------------------------------
+
     lanes[0].setVehicleCount(10);
     lanes[1].setVehicleCount(2);
     lanes[2].setVehicleCount(6);
     lanes[3].setVehicleCount(1);
 
-    // Make sure emergency state starts clear
+    // -------------------------------------------------
+    // Clear Emergency
+    // -------------------------------------------------
+
     clearAllEmergency();
+
+    // -------------------------------------------------
+    // Reset Sensor Filtering
+    // -------------------------------------------------
+
+    for (int i = 0; i < 4; i++)
+    {
+        filteredDistance[i] = -1.0;
+
+        invalidReadings[i] = 0;
+
+        sensorInitialized[i] = false;
+        densityLevel[i] = 0;
+    }
+
+    // -------------------------------------------------
+    // Select Initial Lane
+    // -------------------------------------------------
 
     currentLane = getHighestPriorityLane();
 
@@ -53,6 +100,10 @@ void TrafficController::begin()
     printStatus();
 }
 
+// =====================================================
+// All Red
+// =====================================================
+
 void TrafficController::allRed()
 {
     for (int i = 0; i < 4; i++)
@@ -60,6 +111,10 @@ void TrafficController::allRed()
         lanes[i].red();
     }
 }
+
+// =====================================================
+// Next Lane
+// =====================================================
 
 void TrafficController::nextLane()
 {
@@ -70,6 +125,10 @@ void TrafficController::nextLane()
         currentLane = 0;
     }
 }
+
+// =====================================================
+// Change State
+// =====================================================
 
 void TrafficController::changeState()
 {
@@ -121,6 +180,10 @@ void TrafficController::changeState()
     previousMillis = millis();
 }
 
+// =====================================================
+// Main Update
+// =====================================================
+
 void TrafficController::update()
 {
     if (millis() - previousMillis >= stateDuration)
@@ -134,6 +197,11 @@ void TrafficController::update()
         Serial.println(getCurrentStateName());
     }
 }
+
+// =====================================================
+// Print Status
+// =====================================================
+
 void TrafficController::printStatus()
 {
     const char *laneNames[4] =
@@ -162,31 +230,44 @@ void TrafficController::printStatus()
         Serial.println(lanes[i].getPriorityScore());
 
         Serial.print("Emergency = ");
-        Serial.println(emergency[i] ? "YES" : "NO");
+        Serial.println(
+            emergency[i] ? "YES" : "NO"
+        );
 
         Serial.println("----------------");
     }
 }
 
+// =====================================================
+// Highest Priority Lane
+// =====================================================
+
 int TrafficController::getHighestPriorityLane()
 {
     int bestLane = 0;
 
-    float highestPriority = lanes[0].getPriorityScore();
+    float highestPriority =
+        lanes[0].getPriorityScore();
 
     for (int i = 1; i < 4; i++)
     {
-        float priority = lanes[i].getPriorityScore();
+        float priority =
+            lanes[i].getPriorityScore();
 
         if (priority > highestPriority)
         {
             highestPriority = priority;
+
             bestLane = i;
         }
     }
 
     return bestLane;
 }
+
+// =====================================================
+// Waiting Time
+// =====================================================
 
 void TrafficController::updateWaitingTimes()
 {
@@ -203,9 +284,16 @@ void TrafficController::updateWaitingTimes()
     }
 }
 
+// =====================================================
+// Emergency Lane
+// =====================================================
+
 int TrafficController::getEmergencyLane()
 {
-    // Check our emergency flags first
+    // -------------------------------------------------
+    // Check our emergency flags
+    // -------------------------------------------------
+
     for (int i = 0; i < 4; i++)
     {
         if (emergency[i])
@@ -214,7 +302,10 @@ int TrafficController::getEmergencyLane()
         }
     }
 
-    // Also preserve existing Lane emergency support
+    // -------------------------------------------------
+    // Preserve existing Lane emergency support
+    // -------------------------------------------------
+
     for (int i = 0; i < 4; i++)
     {
         if (lanes[i].isEmergency())
@@ -226,31 +317,60 @@ int TrafficController::getEmergencyLane()
     return -1;
 }
 
+// =====================================================
+// Schedule Next Lane
+// =====================================================
+
 void TrafficController::scheduleNextLane()
 {
     updateWaitingTimes();
 
-    // Remove vehicles that passed through current lane
+    // -------------------------------------------------
+    // Remove vehicles that passed
+    // -------------------------------------------------
+
     lanes[currentLane].removeVehicles(3);
-    int emergencyLane = getEmergencyLane();
+
+    // -------------------------------------------------
+    // Emergency has absolute priority
+    // -------------------------------------------------
+
+    int emergencyLane =
+        getEmergencyLane();
 
     if (emergencyLane != -1)
     {
         currentLane = emergencyLane;
 
         Serial.println();
-        Serial.println(" EMERGENCY VEHICLE PRIORITY");
-        Serial.print("Emergency Lane : ");
-        Serial.println(getCurrentLaneName());
+        Serial.println(
+            " EMERGENCY VEHICLE PRIORITY"
+        );
+
+        Serial.print(
+            "Emergency Lane : "
+        );
+
+        Serial.println(
+            getCurrentLaneName()
+        );
     }
     else
     {
+        // -------------------------------------------------
         // Normal adaptive priority
-        currentLane = getHighestPriorityLane();
+        // -------------------------------------------------
+
+        currentLane =
+            getHighestPriorityLane();
     }
 
     printStatus();
 }
+
+// =====================================================
+// Current Lane Name
+// =====================================================
 
 String TrafficController::getCurrentLaneName()
 {
@@ -272,6 +392,11 @@ String TrafficController::getCurrentLaneName()
             return "Unknown";
     }
 }
+
+// =====================================================
+// Current State Name
+// =====================================================
+
 String TrafficController::getCurrentStateName()
 {
     switch (currentState)
@@ -292,18 +417,29 @@ String TrafficController::getCurrentStateName()
             return "UNKNOWN";
     }
 }
+
+// =====================================================
+// Dashboard Status
+// =====================================================
+
 TrafficStatus TrafficController::getStatus()
 {
     TrafficStatus status;
 
     status.project = "SmartTrafficAI";
+
     status.version = "3.1";
 
-    status.currentLane = getCurrentLaneName();
-    status.signalState = getCurrentStateName();
+    status.currentLane =
+        getCurrentLaneName();
+
+    status.signalState =
+        getCurrentStateName();
 
     status.wifi = "Connected";
+
     status.rssi = WiFi.RSSI();
+
     status.uptime = millis() / 1000;
 
     const char* names[4] =
@@ -316,7 +452,8 @@ TrafficStatus TrafficController::getStatus()
 
     for (int i = 0; i < 4; i++)
     {
-        status.lanes[i].name = names[i];
+        status.lanes[i].name =
+            names[i];
 
         status.lanes[i].vehicles =
             lanes[i].getVehicleCount();
@@ -328,82 +465,458 @@ TrafficStatus TrafficController::getStatus()
             lanes[i].getPriorityScore();
 
         status.lanes[i].emergency =
-            emergency[i] || lanes[i].isEmergency();
+            emergency[i] ||
+            lanes[i].isEmergency();
     }
 
     return status;
 }
+
+// =====================================================
+// SENSOR CALIBRATION
+//
+// Exponential Moving Average:
+// filtered = alpha * current
+//          + (1-alpha) * previous
+// =====================================================
+
+float TrafficController::calibrateDistance(
+    int lane,
+    float rawDistance)
+{
+    // -------------------------------------------------
+    // Safety check
+    // -------------------------------------------------
+
+    if (lane < 0 || lane >= 4)
+    {
+        return -1.0;
+    }
+
+    // -------------------------------------------------
+    // Invalid / Out of Range reading
+    // -------------------------------------------------
+
+    if (rawDistance < 0)
+    {
+        invalidReadings[lane]++;
+
+        // Keep the previous valid value
+        // for a few bad readings.
+        if (
+            sensorInitialized[lane] &&
+            invalidReadings[lane] <
+            MAX_INVALID_READINGS
+        )
+        {
+            return filteredDistance[lane];
+        }
+
+        // Too many invalid readings
+        // means we consider the lane empty.
+        if (
+            invalidReadings[lane] >=
+            MAX_INVALID_READINGS
+        )
+        {
+            filteredDistance[lane] = -1.0;
+
+            sensorInitialized[lane] = false;
+
+            return -1.0;
+        }
+
+        return -1.0;
+    }
+
+    // -------------------------------------------------
+    // Valid reading
+    // -------------------------------------------------
+
+    invalidReadings[lane] = 0;
+
+    // -------------------------------------------------
+    // First valid reading
+    // -------------------------------------------------
+
+    if (!sensorInitialized[lane])
+    {
+        filteredDistance[lane] =
+            rawDistance;
+
+        sensorInitialized[lane] = true;
+
+        return filteredDistance[lane];
+    }
+
+    // -------------------------------------------------
+    // Exponential Moving Average
+    // -------------------------------------------------
+
+    filteredDistance[lane] =
+        (
+            FILTER_ALPHA * rawDistance
+        )
+        +
+        (
+            (1.0 - FILTER_ALPHA)
+            * filteredDistance[lane]
+        );
+
+    return filteredDistance[lane];
+}
+
+int TrafficController::distanceToVehicles(
+    float distance)
+{
+    // -------------------------------------------------
+    // Invalid / no vehicle detected
+    // -------------------------------------------------
+
+    if (distance < 0)
+    {
+        return 0;
+    }
+
+    // -------------------------------------------------
+    // Critical traffic density
+    // -------------------------------------------------
+
+    if (distance <= 10)
+    {
+        return 10;
+    }
+
+    // -------------------------------------------------
+    // Very high density
+    // -------------------------------------------------
+
+    if (distance <= 20)
+    {
+        return 8;
+    }
+
+    // -------------------------------------------------
+    // High density
+    // -------------------------------------------------
+
+    if (distance <= 30)
+    {
+        return 6;
+    }
+
+    // -------------------------------------------------
+    // Moderate density
+    // -------------------------------------------------
+
+    if (distance <= 40)
+    {
+        return 4;
+    }
+
+    // -------------------------------------------------
+    // Low density
+    // -------------------------------------------------
+
+    if (distance <= 60)
+    {
+        return 2;
+    }
+
+    // -------------------------------------------------
+    // Very low / no traffic
+    // -------------------------------------------------
+
+    return 0;
+}
+
+int TrafficController::getStableDensity(
+    int lane,
+    float distance
+)
+{
+    if (lane < 0 || lane >= 4)
+    {
+        return 0;
+    }
+
+    // -------------------------------------------------
+    // No valid distance
+    // -------------------------------------------------
+
+    if (distance < 0)
+    {
+        densityLevel[lane] = 0;
+
+        return 0;
+    }
+
+    int currentLevel =
+        densityLevel[lane];
+
+
+    if (currentLevel == 0)
+    {
+        int newLevel =
+            distanceToVehicles(distance);
+
+        densityLevel[lane] =
+            newLevel;
+
+        return newLevel;
+    }
+
+    // -------------------------------------------------
+    // Hysteresis boundaries
+    // -------------------------------------------------
+
+    // Critical → Very High
+    if (currentLevel == 10)
+    {
+        if (distance > 11.5)
+        {
+            densityLevel[lane] = 8;
+        }
+
+        return densityLevel[lane];
+    }
+
+    // Very High → Critical
+    if (currentLevel == 8)
+    {
+        if (distance <= 9.0)
+        {
+            densityLevel[lane] = 10;
+        }
+        else if (distance > 21.0)
+        {
+            densityLevel[lane] = 6;
+        }
+
+        return densityLevel[lane];
+    }
+
+    // High → Very High / Moderate
+    if (currentLevel == 6)
+    {
+        if (distance <= 19.0)
+        {
+            densityLevel[lane] = 8;
+        }
+        else if (distance > 31.0)
+        {
+            densityLevel[lane] = 4;
+        }
+
+        return densityLevel[lane];
+    }
+
+    // Moderate → High / Low
+    if (currentLevel == 4)
+    {
+        if (distance <= 29.0)
+        {
+            densityLevel[lane] = 6;
+        }
+        else if (distance > 41.0)
+        {
+            densityLevel[lane] = 2;
+        }
+
+        return densityLevel[lane];
+    }
+
+    // Low → Moderate / Very Low
+    if (currentLevel == 2)
+    {
+        if (distance <= 39.0)
+        {
+            densityLevel[lane] = 4;
+        }
+        else if (distance > 61.0)
+        {
+            densityLevel[lane] = 0;
+        }
+
+        return densityLevel[lane];
+    }
+
+
+    densityLevel[lane] =
+        distanceToVehicles(distance);
+
+    return densityLevel[lane];
+}
+
 void TrafficController::updateSensorData(
     float north,
     float east,
     float south,
     float west)
 {
-    auto distanceToVehicles = [](float distance) -> int
+    // -------------------------------------------------
+    // Raw sensor readings
+    // -------------------------------------------------
+
+    float rawDistance[4] =
     {
-        if (distance < 0)
-            return 0;
-
-        if (distance <= 10)
-            return 10;
-
-        if (distance <= 20)
-            return 8;
-
-        if (distance <= 30)
-            return 6;
-
-        if (distance <= 40)
-            return 4;
-
-        if (distance <= 60)
-            return 2;
-
-        return 0;
+        north,
+        east,
+        south,
+        west
     };
 
-    lanes[0].setVehicleCount(
-        distanceToVehicles(north)
-    );
+    // -------------------------------------------------
+    // Process each lane
+    // -------------------------------------------------
 
-    lanes[1].setVehicleCount(
-        distanceToVehicles(east)
-    );
+    for (int i = 0; i < 4; i++)
+    {
+        float calibrated =
+            calibrateDistance(
+                i,
+                rawDistance[i]
+            );
 
-    lanes[2].setVehicleCount(
-        distanceToVehicles(south)
-    );
+        int density =
+            getStableDensity(
+            i,
+            calibrated
+            );
 
-    lanes[3].setVehicleCount(
-        distanceToVehicles(west)
-    );
+        lanes[i].setVehicleCount(
+            density
+        );
+    }
+
+    // -------------------------------------------------
+    // Serial Monitor
+    // -------------------------------------------------
 
     Serial.println();
-    Serial.println("========== SENSOR UPDATE ==========");
 
-    Serial.print("North : ");
-    Serial.println(lanes[0].getVehicleCount());
+    Serial.println(
+        "========== SENSOR UPDATE =========="
+    );
 
-    Serial.print("East  : ");
-    Serial.println(lanes[1].getVehicleCount());
+    const char* names[4] =
+    {
+        "North",
+        "East",
+        "South",
+        "West"
+    };
 
-    Serial.print("South : ");
-    Serial.println(lanes[2].getVehicleCount());
+    for (int i = 0; i < 4; i++)
+    {
+        Serial.print(
+            names[i]
+        );
 
-    Serial.print("West  : ");
-    Serial.println(lanes[3].getVehicleCount());
+        Serial.print(
+            " | Raw = "
+        );
 
+        Serial.print(
+            rawDistance[i],
+            2
+        );
+
+        Serial.print(
+            " cm | Filtered = "
+        );
+
+        if (filteredDistance[i] < 0)
+        {
+            Serial.print(
+                "Out of Range"
+            );
+        }
+        else
+        {
+            Serial.print(
+                filteredDistance[i],
+                2
+            );
+
+            Serial.print(
+                " cm"
+            );
+        }
+
+        Serial.print(
+    " | Density = "
+);
+
+Serial.print(
+    lanes[i].getVehicleCount()
+);
+
+Serial.print(
+    " | Level = "
+);
+
+switch (densityLevel[i])
+{
+    case 0:
+        Serial.println("VERY LOW");
+        break;
+
+    case 2:
+        Serial.println("LOW");
+        break;
+
+    case 4:
+        Serial.println("MODERATE");
+        break;
+
+    case 6:
+        Serial.println("HIGH");
+        break;
+
+    case 8:
+        Serial.println("VERY HIGH");
+        break;
+
+    case 10:
+        Serial.println("CRITICAL");
+        break;
+
+    default:
+        Serial.println("UNKNOWN");
+        break;
 }
-void TrafficController::setEmergencyLane(int lane)
+
+        Serial.println(
+            lanes[i].getVehicleCount()
+        );
+    }
+
+    Serial.println(
+        "==================================="
+    );
+}
+ 
+// =====================================================
+// SET EMERGENCY
+// =====================================================
+
+void TrafficController::setEmergencyLane(
+    int lane)
 {
     if (lane < 0 || lane >= 4)
     {
-        Serial.println("Invalid emergency lane");
+        Serial.println(
+            "Invalid emergency lane"
+        );
 
         return;
     }
 
-    // Clear all other emergency flags
+    // -------------------------------------------------
+    // Clear other emergency flags
+    // -------------------------------------------------
+
     for (int i = 0; i < 4; i++)
     {
         emergency[i] = false;
@@ -412,11 +925,22 @@ void TrafficController::setEmergencyLane(int lane)
     emergency[lane] = true;
 
     Serial.println();
-    Serial.println("==================================");
-    Serial.println(" EMERGENCY VEHICLE DETECTED");
-    Serial.println("==================================");
 
-    Serial.print("Emergency Lane : ");
+    Serial.println(
+        "=================================="
+    );
+
+    Serial.println(
+        " EMERGENCY VEHICLE DETECTED"
+    );
+
+    Serial.println(
+        "=================================="
+    );
+
+    Serial.print(
+        "Emergency Lane : "
+    );
 
     switch (lane)
     {
@@ -437,9 +961,17 @@ void TrafficController::setEmergencyLane(int lane)
             break;
     }
 
-    Serial.println("==================================");
+    Serial.println(
+        "=================================="
+    );
 }
-void TrafficController::clearEmergencyLane(int lane)
+
+// =====================================================
+// CLEAR ONE EMERGENCY
+// =====================================================
+
+void TrafficController::clearEmergencyLane(
+    int lane)
 {
     if (lane < 0 || lane >= 4)
     {
@@ -448,7 +980,9 @@ void TrafficController::clearEmergencyLane(int lane)
 
     emergency[lane] = false;
 
-    Serial.print("Emergency cleared for lane : ");
+    Serial.print(
+        "Emergency cleared for lane : "
+    );
 
     switch (lane)
     {
@@ -469,6 +1003,11 @@ void TrafficController::clearEmergencyLane(int lane)
             break;
     }
 }
+
+// =====================================================
+// CLEAR ALL EMERGENCY
+// =====================================================
+
 void TrafficController::clearAllEmergency()
 {
     for (int i = 0; i < 4; i++)
@@ -477,7 +1016,12 @@ void TrafficController::clearAllEmergency()
     }
 }
 
-bool TrafficController::isEmergencyLane(int lane)
+// =====================================================
+// CHECK EMERGENCY
+// =====================================================
+
+bool TrafficController::isEmergencyLane(
+    int lane)
 {
     if (lane < 0 || lane >= 4)
     {
