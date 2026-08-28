@@ -12,6 +12,7 @@ TrafficController::TrafficController()
 
     currentLane = 0;
     currentState = PRE_GREEN_YELLOW_STATE;
+    yellowBeforeGreen = true;
 
     previousMillis = 0;
     stateDuration = 2000;
@@ -92,8 +93,9 @@ void TrafficController::begin()
     lanes[currentLane].yellow();
 
     currentState = PRE_GREEN_YELLOW_STATE;
+    yellowBeforeGreen = true;
 
-    stateDuration = 2000;
+    stateDuration = 3000;
 
     previousMillis = millis();
 
@@ -125,36 +127,253 @@ void TrafficController::nextLane()
         currentLane = 0;
     }
 }
-
 // =====================================================
-// Change State
+// ADAPTIVE GREEN TIME
 // =====================================================
 
+unsigned long TrafficController::calculateGreenTime(int lane)
+{
+    if (lane < 0 || lane >= 4)
+    {
+        return MIN_GREEN_TIME * 1000UL;
+    }
+
+    int vehicles =
+        lanes[lane].getVehicleCount();
+
+    int waiting =
+        lanes[lane].getWaitingTime();
+
+    // -------------------------------------------------
+    // Base green time
+    // -------------------------------------------------
+
+    unsigned long greenTime =
+        MIN_GREEN_TIME;
+
+    // -------------------------------------------------
+    // Add time according to traffic density
+    // -------------------------------------------------
+
+    if (vehicles >= 10)
+    {
+        greenTime = 35;
+    }
+    else if (vehicles >= 8)
+    {
+        greenTime = 30;
+    }
+    else if (vehicles >= 6)
+    {
+        greenTime = 25;
+    }
+    else if (vehicles >= 4)
+    {
+        greenTime = 20;
+    }
+    else if (vehicles >= 2)
+    {
+        greenTime = 15;
+    }
+    else
+    {
+        greenTime = 10;
+    }
+
+    // -------------------------------------------------
+    // Waiting-time bonus
+    // -------------------------------------------------
+
+    if (waiting >= 20)
+    {
+        greenTime += 5;
+    }
+    else if (waiting >= 10)
+    {
+        greenTime += 3;
+    }
+
+    // -------------------------------------------------
+    // Maximum green-time protection
+    // -------------------------------------------------
+
+    if (greenTime > 40)
+    {
+        greenTime = 40;
+    }
+
+    // -------------------------------------------------
+    // Serial Debug
+    // -------------------------------------------------
+
+    Serial.println();
+    Serial.println(
+        "========== ADAPTIVE GREEN TIME =========="
+    );
+
+    Serial.print(
+        "Lane : "
+    );
+
+    Serial.println(
+        getCurrentLaneName()
+    );
+
+    Serial.print(
+        "Vehicles/Density : "
+    );
+
+    Serial.println(
+        vehicles
+    );
+
+    Serial.print(
+        "Waiting Time : "
+    );
+
+    Serial.println(
+        waiting
+    );
+
+    Serial.print(
+        "Green Time : "
+    );
+
+    Serial.print(
+        greenTime
+    );
+
+    Serial.println(
+        " seconds"
+    );
+
+    Serial.println(
+        "=========================================="
+    );
+
+    return greenTime * 1000UL;
+}
 void TrafficController::changeState()
 {
     switch (currentState)
     {
+        // =================================================
+        // PRE-GREEN YELLOW
+        // =================================================
+
         case PRE_GREEN_YELLOW_STATE:
 
-            lanes[currentLane].green();
+            if (yellowBeforeGreen)
+            {
+                // -------------------------------------------------
+                // Yellow warning has finished
+                // Now change to GREEN
+                // -------------------------------------------------
 
-            currentState = GREEN_STATE;
+                lanes[currentLane].green();
 
-            stateDuration = MIN_GREEN_TIME * 1000UL;
+                currentState = GREEN_STATE;
+
+                // -------------------------------------------------
+                // Calculate adaptive GREEN time
+                // -------------------------------------------------
+
+                stateDuration =
+                    calculateGreenTime(currentLane);
+
+                Serial.println();
+                Serial.println(
+                    "========== GREEN SIGNAL =========="
+                );
+
+                Serial.print(
+                    "Lane : "
+                );
+
+                Serial.println(
+                    getCurrentLaneName()
+                );
+
+                Serial.print(
+                    "Green Duration : "
+                );
+
+                Serial.print(
+                    stateDuration / 1000
+                );
+
+                Serial.println(
+                    " seconds"
+                );
+
+                Serial.println(
+                    "=================================="
+                );
+
+                yellowBeforeGreen = false;
+            }
 
             break;
 
+
+        // =================================================
+        // GREEN
+        // =================================================
+
         case GREEN_STATE:
+
+            // -------------------------------------------------
+            // GREEN → YELLOW
+            // -------------------------------------------------
 
             lanes[currentLane].yellow();
 
             currentState = YELLOW_STATE;
 
-            stateDuration = YELLOW_TIME * 1000UL;
+            stateDuration =
+                YELLOW_TIME * 1000UL;
+
+            Serial.println();
+            Serial.println(
+                "========== GREEN → YELLOW =========="
+            );
+
+            Serial.print(
+                "Lane : "
+            );
+
+            Serial.println(
+                getCurrentLaneName()
+            );
+
+            Serial.print(
+                "Yellow Duration : "
+            );
+
+            Serial.print(
+                YELLOW_TIME
+            );
+
+            Serial.println(
+                " seconds"
+            );
+
+            Serial.println(
+                "===================================="
+            );
 
             break;
 
+
+        // =================================================
+        // YELLOW
+        // =================================================
+
         case YELLOW_STATE:
+
+            // -------------------------------------------------
+            // YELLOW → ALL RED
+            // -------------------------------------------------
 
             allRed();
 
@@ -162,17 +381,79 @@ void TrafficController::changeState()
 
             stateDuration = 1000;
 
+            Serial.println();
+            Serial.println(
+                "========== ALL RED =========="
+            );
+
+            Serial.println(
+                "All signals OFF/RED"
+            );
+
+            Serial.println(
+                "All Red Duration : 1 second"
+            );
+
+            Serial.println(
+                "============================="
+            );
+
             break;
+
+
+        // =================================================
+        // ALL RED
+        // =================================================
 
         case ALL_RED_STATE:
 
+            // -------------------------------------------------
+            // Select next lane
+            // -------------------------------------------------
+
             scheduleNextLane();
+
+            // -------------------------------------------------
+            // New lane starts YELLOW
+            // -------------------------------------------------
 
             lanes[currentLane].yellow();
 
-            currentState = PRE_GREEN_YELLOW_STATE;
+            currentState =
+                PRE_GREEN_YELLOW_STATE;
 
-            stateDuration = 2000;
+            // -------------------------------------------------
+            // Enable yellow-before-green sequence
+            // -------------------------------------------------
+
+            yellowBeforeGreen = true;
+
+            // -------------------------------------------------
+            // Yellow warning = 3 seconds
+            // -------------------------------------------------
+
+            stateDuration = 3000;
+
+            Serial.println();
+            Serial.println(
+                "========== NEXT LANE =========="
+            );
+
+            Serial.print(
+                "Next Lane : "
+            );
+
+            Serial.println(
+                getCurrentLaneName()
+            );
+
+            Serial.println(
+                "Yellow Before Green : 3 seconds"
+            );
+
+            Serial.println(
+                "==============================="
+            );
 
             break;
     }
@@ -302,10 +583,6 @@ int TrafficController::getEmergencyLane()
         }
     }
 
-    // -------------------------------------------------
-    // Preserve existing Lane emergency support
-    // -------------------------------------------------
-
     for (int i = 0; i < 4; i++)
     {
         if (lanes[i].isEmergency())
@@ -317,23 +594,11 @@ int TrafficController::getEmergencyLane()
     return -1;
 }
 
-// =====================================================
-// Schedule Next Lane
-// =====================================================
-
 void TrafficController::scheduleNextLane()
 {
     updateWaitingTimes();
 
-    // -------------------------------------------------
-    // Remove vehicles that passed
-    // -------------------------------------------------
-
     lanes[currentLane].removeVehicles(3);
-
-    // -------------------------------------------------
-    // Emergency has absolute priority
-    // -------------------------------------------------
 
     int emergencyLane =
         getEmergencyLane();
@@ -357,9 +622,6 @@ void TrafficController::scheduleNextLane()
     }
     else
     {
-        // -------------------------------------------------
-        // Normal adaptive priority
-        // -------------------------------------------------
 
         currentLane =
             getHighestPriorityLane();
@@ -367,10 +629,6 @@ void TrafficController::scheduleNextLane()
 
     printStatus();
 }
-
-// =====================================================
-// Current Lane Name
-// =====================================================
 
 String TrafficController::getCurrentLaneName()
 {
@@ -393,10 +651,6 @@ String TrafficController::getCurrentLaneName()
     }
 }
 
-// =====================================================
-// Current State Name
-// =====================================================
-
 String TrafficController::getCurrentStateName()
 {
     switch (currentState)
@@ -417,10 +671,6 @@ String TrafficController::getCurrentStateName()
             return "UNKNOWN";
     }
 }
-
-// =====================================================
-// Dashboard Status
-// =====================================================
 
 TrafficStatus TrafficController::getStatus()
 {
@@ -472,30 +722,14 @@ TrafficStatus TrafficController::getStatus()
     return status;
 }
 
-// =====================================================
-// SENSOR CALIBRATION
-//
-// Exponential Moving Average:
-// filtered = alpha * current
-//          + (1-alpha) * previous
-// =====================================================
-
 float TrafficController::calibrateDistance(
     int lane,
     float rawDistance)
 {
-    // -------------------------------------------------
-    // Safety check
-    // -------------------------------------------------
-
     if (lane < 0 || lane >= 4)
     {
         return -1.0;
     }
-
-    // -------------------------------------------------
-    // Invalid / Out of Range reading
-    // -------------------------------------------------
 
     if (rawDistance < 0)
     {
@@ -529,15 +763,7 @@ float TrafficController::calibrateDistance(
         return -1.0;
     }
 
-    // -------------------------------------------------
-    // Valid reading
-    // -------------------------------------------------
-
     invalidReadings[lane] = 0;
-
-    // -------------------------------------------------
-    // First valid reading
-    // -------------------------------------------------
 
     if (!sensorInitialized[lane])
     {
@@ -548,10 +774,6 @@ float TrafficController::calibrateDistance(
 
         return filteredDistance[lane];
     }
-
-    // -------------------------------------------------
-    // Exponential Moving Average
-    // -------------------------------------------------
 
     filteredDistance[lane] =
         (
@@ -569,63 +791,35 @@ float TrafficController::calibrateDistance(
 int TrafficController::distanceToVehicles(
     float distance)
 {
-    // -------------------------------------------------
-    // Invalid / no vehicle detected
-    // -------------------------------------------------
-
     if (distance < 0)
     {
         return 0;
     }
-
-    // -------------------------------------------------
-    // Critical traffic density
-    // -------------------------------------------------
 
     if (distance <= 10)
     {
         return 10;
     }
 
-    // -------------------------------------------------
-    // Very high density
-    // -------------------------------------------------
-
     if (distance <= 20)
     {
         return 8;
     }
-
-    // -------------------------------------------------
-    // High density
-    // -------------------------------------------------
 
     if (distance <= 30)
     {
         return 6;
     }
 
-    // -------------------------------------------------
-    // Moderate density
-    // -------------------------------------------------
-
     if (distance <= 40)
     {
         return 4;
     }
 
-    // -------------------------------------------------
-    // Low density
-    // -------------------------------------------------
-
     if (distance <= 60)
     {
         return 2;
     }
-
-    // -------------------------------------------------
-    // Very low / no traffic
-    // -------------------------------------------------
 
     return 0;
 }
@@ -639,10 +833,6 @@ int TrafficController::getStableDensity(
     {
         return 0;
     }
-
-    // -------------------------------------------------
-    // No valid distance
-    // -------------------------------------------------
 
     if (distance < 0)
     {
@@ -665,10 +855,6 @@ int TrafficController::getStableDensity(
 
         return newLevel;
     }
-
-    // -------------------------------------------------
-    // Hysteresis boundaries
-    // -------------------------------------------------
 
     // Critical → Very High
     if (currentLevel == 10)

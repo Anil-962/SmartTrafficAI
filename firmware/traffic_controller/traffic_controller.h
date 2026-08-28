@@ -49,6 +49,7 @@ private:
 
     int currentLane;
     int currentState;
+    bool yellowBeforeGreen;
 
     unsigned long previousMillis;
     unsigned long stateDuration;
@@ -82,6 +83,7 @@ private:
     void printStatus();
 
     int getHighestPriorityLane();
+    unsigned long calculateGreenTime(int lane);
 
     int getEmergencyLane();
 
