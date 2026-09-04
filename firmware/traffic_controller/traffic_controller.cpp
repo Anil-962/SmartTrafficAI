@@ -13,9 +13,17 @@ TrafficController::TrafficController()
     currentLane = 0;
     currentState = PRE_GREEN_YELLOW_STATE;
     yellowBeforeGreen = true;
+    currentSeverity = SEVERITY_NORMAL;
 
     previousMillis = 0;
     stateDuration = 2000;
+    currentEvent = EVENT_NONE;
+    eventStartTime = 0;
+    previousHighestDensity = 0;
+    densityChangeTime = 0;
+
+    pendingEvent = EVENT_NONE;
+    pendingEventStartTime = 0;
 
     // -------------------------------------------------
     // Emergency
@@ -257,27 +265,14 @@ void TrafficController::changeState()
 {
     switch (currentState)
     {
-        // =================================================
-        // PRE-GREEN YELLOW
-        // =================================================
-
         case PRE_GREEN_YELLOW_STATE:
 
             if (yellowBeforeGreen)
             {
-                // -------------------------------------------------
-                // Yellow warning has finished
-                // Now change to GREEN
-                // -------------------------------------------------
-
                 lanes[currentLane].green();
 
                 currentState = GREEN_STATE;
-
-                // -------------------------------------------------
-                // Calculate adaptive GREEN time
-                // -------------------------------------------------
-
+                
                 stateDuration =
                     calculateGreenTime(currentLane);
 
@@ -1081,6 +1076,7 @@ switch (densityLevel[i])
     Serial.println(
         "==================================="
     );
+    detectTrafficEvents();
 }
  
 // =====================================================
@@ -1215,4 +1211,286 @@ bool TrafficController::isEmergencyLane(
     }
 
     return emergency[lane];
+}
+
+void TrafficController::calculateEventSeverity()
+{
+    int highestDensity = 0;
+    int blockedLanes = 0;
+
+    for (int i = 0; i < 4; i++)
+    {
+        int density = lanes[i].getVehicleCount();
+
+        if (density > highestDensity)
+        {
+            highestDensity = density;
+        }
+
+        if (density >= 8)
+        {
+            blockedLanes++;
+        }
+    }
+
+    switch (currentEvent)
+    {
+        case EVENT_NONE:
+            currentSeverity = SEVERITY_NORMAL;
+            break;
+
+        case EVENT_CONGESTION:
+            if (highestDensity >= 10)
+            {
+                currentSeverity = SEVERITY_HIGH;
+            }
+            else if (highestDensity >= 8)
+            {
+                currentSeverity = SEVERITY_MEDIUM;
+            }
+            else
+            {
+                currentSeverity = SEVERITY_LOW;
+            }
+            break;
+
+        case EVENT_SUDDEN_TRAFFIC:
+            if (highestDensity >= 10)
+            {
+                currentSeverity = SEVERITY_HIGH;
+            }
+            else
+            {
+                currentSeverity = SEVERITY_MEDIUM;
+            }
+            break;
+
+        case EVENT_LANE_BLOCKED:
+            if (blockedLanes >= 3)
+            {
+                currentSeverity = SEVERITY_CRITICAL;
+            }
+            else
+            {
+                currentSeverity = SEVERITY_HIGH;
+            }
+            break;
+
+        case EVENT_ABNORMAL:
+            currentSeverity = SEVERITY_HIGH;
+            break;
+
+        default:
+            currentSeverity = SEVERITY_NORMAL;
+            break;
+    }
+}
+String TrafficController::getSeverityName()
+{
+    switch (currentSeverity)
+    {
+        case SEVERITY_NORMAL:
+            return "NORMAL";
+
+        case SEVERITY_LOW:
+            return "LOW";
+
+        case SEVERITY_MEDIUM:
+            return "MEDIUM";
+
+        case SEVERITY_HIGH:
+            return "HIGH";
+
+        case SEVERITY_CRITICAL:
+            return "CRITICAL";
+
+        default:
+            return "NORMAL";
+    }
+}
+String TrafficController::getEventName()
+{
+    switch (currentEvent)
+    {
+        case EVENT_CONGESTION:
+            return "CONGESTION";
+
+        case EVENT_SUDDEN_TRAFFIC:
+            return "SUDDEN_TRAFFIC";
+
+        case EVENT_LANE_BLOCKED:
+            return "LANE_BLOCKED";
+
+        case EVENT_ABNORMAL:
+            return "ABNORMAL";
+
+        case EVENT_NONE:
+        default:
+            return "NONE";
+    }
+}
+String TrafficController::getTrafficEvent()
+{
+    return getEventName();
+}
+
+
+void TrafficController::detectTrafficEvents()
+{
+    TrafficEventType detectedEvent = EVENT_NONE;
+
+    int highestDensity = 0;
+    int blockedLanes = 0;
+
+    // -------------------------------------------------
+    // Analyze all lanes
+    // -------------------------------------------------
+
+    for (int i = 0; i < 4; i++)
+    {
+        int density =
+            lanes[i].getVehicleCount();
+
+        if (density > highestDensity)
+        {
+            highestDensity = density;
+        }
+
+        if (density >= 8)
+        {
+            blockedLanes++;
+        }
+    }
+
+    // -------------------------------------------------
+    // 1. Lane blocked has highest priority
+    // -------------------------------------------------
+
+    if (blockedLanes >= 2)
+    {
+        detectedEvent = EVENT_LANE_BLOCKED;
+    }
+
+    // -------------------------------------------------
+    // 2. Sudden traffic
+    // -------------------------------------------------
+
+    else if (
+        highestDensity -
+        previousHighestDensity >= 4
+    )
+    {
+        detectedEvent = EVENT_SUDDEN_TRAFFIC;
+
+        densityChangeTime = millis();
+
+        Serial.println();
+        Serial.println(
+            "========== SUDDEN TRAFFIC =========="
+        );
+
+        Serial.print(
+            "Previous Density : "
+        );
+
+        Serial.println(
+            previousHighestDensity
+        );
+
+        Serial.print(
+            "Current Density : "
+        );
+
+        Serial.println(
+            highestDensity
+        );
+
+        Serial.println(
+            "===================================="
+        );
+    }
+
+    // -------------------------------------------------
+    // 3. Severe congestion
+    // -------------------------------------------------
+
+    else if (highestDensity >= 8)
+    {
+        detectedEvent = EVENT_CONGESTION;
+    }
+
+    // -------------------------------------------------
+    // Update previous density
+    // -------------------------------------------------
+
+    previousHighestDensity =
+        highestDensity;
+
+if (detectedEvent != currentEvent)
+{
+    // New event detected
+    if (detectedEvent != pendingEvent)
+    {
+        pendingEvent = detectedEvent;
+        pendingEventStartTime = millis();
+
+        Serial.println();
+        Serial.println("========== PENDING TRAFFIC EVENT ==========");
+        Serial.print("Event : ");
+
+        switch (pendingEvent)
+        {
+            case EVENT_CONGESTION:
+                Serial.println("CONGESTION");
+                break;
+
+            case EVENT_SUDDEN_TRAFFIC:
+                Serial.println("SUDDEN_TRAFFIC");
+                break;
+
+            case EVENT_LANE_BLOCKED:
+                Serial.println("LANE_BLOCKED");
+                break;
+
+            case EVENT_ABNORMAL:
+                Serial.println("ABNORMAL");
+                break;
+
+            case EVENT_NONE:
+            default:
+                Serial.println("NONE");
+                break;
+        }
+
+        Serial.println("Confirmation Time : 5 seconds");
+        Serial.println("===========================================");
+    }
+
+    // Confirm event only after remaining stable
+    if (millis() - pendingEventStartTime >= EVENT_CONFIRMATION_TIME)
+    {
+        currentEvent = pendingEvent;
+        eventStartTime = millis();
+
+        Serial.println();
+        Serial.println("========== TRAFFIC EVENT CONFIRMED ==========");
+        Serial.print("Event : ");
+        Serial.println(getEventName());
+        Serial.print("Highest Density : ");
+        Serial.println(highestDensity);
+        Serial.print("Affected Lanes : ");
+        Serial.println(blockedLanes);
+        Serial.println("=============================================");
+    }
+}
+else
+{
+    // Event is already stable
+    pendingEvent = currentEvent;
+    pendingEventStartTime = millis();
+}   
+calculateEventSeverity();
+
+Serial.print("Severity : ");
+Serial.println(getSeverityName());
 }

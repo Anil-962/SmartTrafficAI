@@ -7,12 +7,13 @@ HttpServer::HttpServer() : server(80)
 {
     controller = nullptr;
 }
+
 void HttpServer::handleRoot()
 {
     server.send(
         200,
         "application/json",
-        "{\"project\":\"SmartTrafficAI\",\"version\":\"3.1\",\"status\":\"running\"}"
+        "{\"project\":\"SmartTrafficAI\",\"version\":\"3.3\",\"status\":\"running\"}"
     );
 }
 
@@ -37,21 +38,40 @@ void HttpServer::handleStatus()
     doc["version"] = status.version;
     doc["currentLane"] = status.currentLane;
     doc["signalState"] = status.signalState;
+
+    // -------------------------------------------------
+    // Traffic Event
+    // -------------------------------------------------
+
+    doc["trafficEvent"] = controller->getTrafficEvent();
+    doc["trafficSeverity"] = controller->getSeverityName();
+
     doc["wifi"] = status.wifi;
     doc["rssi"] = status.rssi;
     doc["uptime"] = status.uptime;
 
-    JsonArray lanes = doc.createNestedArray("lanes");
+    JsonArray lanes =
+        doc.createNestedArray("lanes");
 
     for (int i = 0; i < 4; i++)
     {
-        JsonObject lane = lanes.createNestedObject();
+        JsonObject lane =
+            lanes.createNestedObject();
 
-        lane["name"] = status.lanes[i].name;
-        lane["vehicles"] = status.lanes[i].vehicles;
-        lane["waiting"] = status.lanes[i].waiting;
-        lane["priority"] = status.lanes[i].priority;
-        lane["emergency"] = status.lanes[i].emergency;
+        lane["name"] =
+            status.lanes[i].name;
+
+        lane["vehicles"] =
+            status.lanes[i].vehicles;
+
+        lane["waiting"] =
+            status.lanes[i].waiting;
+
+        lane["priority"] =
+            status.lanes[i].priority;
+
+        lane["emergency"] =
+            status.lanes[i].emergency;
     }
 
     String json;
@@ -80,7 +100,9 @@ void HttpServer::handleSensor()
 
     if (!server.hasArg("plain"))
     {
-        Serial.println("ERROR: No JSON body received");
+        Serial.println(
+            "ERROR: No JSON body received"
+        );
 
         server.send(
             400,
@@ -94,9 +116,15 @@ void HttpServer::handleSensor()
     String body = server.arg("plain");
 
     Serial.println();
-    Serial.println("========================================");
-    Serial.println("         SENSOR DATA RECEIVED");
-    Serial.println("========================================");
+    Serial.println(
+        "========================================"
+    );
+    Serial.println(
+        "         SENSOR DATA RECEIVED"
+    );
+    Serial.println(
+        "========================================"
+    );
 
     Serial.print("JSON : ");
     Serial.println(body);
@@ -108,8 +136,13 @@ void HttpServer::handleSensor()
 
     if (error)
     {
-        Serial.print("JSON Parse Error : ");
-        Serial.println(error.c_str());
+        Serial.print(
+            "JSON Parse Error : "
+        );
+
+        Serial.println(
+            error.c_str()
+        );
 
         server.send(
             400,
@@ -126,7 +159,9 @@ void HttpServer::handleSensor()
     float west  = doc["west"]  | -1.0;
 
     Serial.println();
-    Serial.println("Sensor Distances:");
+    Serial.println(
+        "Sensor Distances:"
+    );
 
     Serial.print("North : ");
     Serial.println(north);
@@ -154,25 +189,18 @@ void HttpServer::handleSensor()
     );
 
     Serial.println();
-    Serial.println("Sensor Data Updated Successfully");
-    Serial.println("HTTP Response : 200 OK");
-    Serial.println("========================================");
-}
+    Serial.println(
+        "Sensor Data Updated Successfully"
+    );
 
-// =====================================================
-// EMERGENCY
-// POST /emergency
-//
-// JSON:
-// {
-//     "lane": 2
-// }
-//
-// 0 = North
-// 1 = East
-// 2 = South
-// 3 = West
-// =====================================================
+    Serial.println(
+        "HTTP Response : 200 OK"
+    );
+
+    Serial.println(
+        "========================================"
+    );
+}
 
 void HttpServer::handleEmergency()
 {
@@ -201,9 +229,17 @@ void HttpServer::handleEmergency()
     String body = server.arg("plain");
 
     Serial.println();
-    Serial.println("========================================");
-    Serial.println("       EMERGENCY REQUEST RECEIVED");
-    Serial.println("========================================");
+    Serial.println(
+        "========================================"
+    );
+
+    Serial.println(
+        "       EMERGENCY REQUEST RECEIVED"
+    );
+
+    Serial.println(
+        "========================================"
+    );
 
     Serial.print("JSON : ");
     Serial.println(body);
@@ -215,8 +251,13 @@ void HttpServer::handleEmergency()
 
     if (error)
     {
-        Serial.print("JSON Parse Error : ");
-        Serial.println(error.c_str());
+        Serial.print(
+            "JSON Parse Error : "
+        );
+
+        Serial.println(
+            error.c_str()
+        );
 
         server.send(
             400,
@@ -259,22 +300,18 @@ void HttpServer::handleEmergency()
         "{\"status\":\"emergency_set\",\"success\":true}"
     );
 
-    Serial.println("Emergency lane set successfully");
-    Serial.println("HTTP Response : 200 OK");
-    Serial.println("========================================");
-}
+    Serial.println(
+        "Emergency lane set successfully"
+    );
 
-// =====================================================
-// CLEAR EMERGENCY
-// POST /clear-emergency
-//
-// JSON:
-// {
-//     "lane": 2
-// }
-//
-// If lane is omitted, all emergencies are cleared.
-// =====================================================
+    Serial.println(
+        "HTTP Response : 200 OK"
+    );
+
+    Serial.println(
+        "========================================"
+    );
+}
 
 void HttpServer::handleClearEmergency()
 {
@@ -354,14 +391,21 @@ void HttpServer::handleClearEmergency()
         "{\"status\":\"emergency_cleared\",\"success\":true}"
     );
 
-    Serial.print("Emergency cleared for lane : ");
+    Serial.print(
+        "Emergency cleared for lane : "
+    );
+
     Serial.println(lane);
 }
-void HttpServer::begin(TrafficController* ctrl)
+
+void HttpServer::begin(
+    TrafficController* ctrl
+)
 {
     controller = ctrl;
 
     server.enableCORS(true);
+
     server.on(
         "/",
         HTTP_GET,
@@ -370,6 +414,7 @@ void HttpServer::begin(TrafficController* ctrl)
             this
         )
     );
+
     server.on(
         "/status",
         HTTP_GET,
@@ -378,6 +423,7 @@ void HttpServer::begin(TrafficController* ctrl)
             this
         )
     );
+
     server.on(
         "/sensor",
         HTTP_POST,
@@ -409,22 +455,42 @@ void HttpServer::begin(TrafficController* ctrl)
     server.begin();
 
     Serial.println();
-    Serial.println("==================================");
-    Serial.println(" SmartTrafficAI HTTP Server");
-    Serial.println("==================================");
+    Serial.println(
+        "=================================="
+    );
 
-    Serial.print("Server Running : http://");
-    Serial.println(WiFi.localIP());
+    Serial.println(
+        " SmartTrafficAI HTTP Server"
+    );
+
+    Serial.println(
+        "=================================="
+    );
+
+    Serial.print(
+        "Server Running : http://"
+    );
+
+    Serial.println(
+        WiFi.localIP()
+    );
 
     Serial.println();
-    Serial.println("Available Endpoints:");
+    Serial.println(
+        "Available Endpoints:"
+    );
+
     Serial.println("GET  /");
     Serial.println("GET  /status");
     Serial.println("POST /sensor");
     Serial.println("POST /emergency");
-    Serial.println("POST /clear-emergency");
+    Serial.println(
+        "POST /clear-emergency"
+    );
 
-    Serial.println("==================================");
+    Serial.println(
+        "=================================="
+    );
 }
 
 void HttpServer::update()

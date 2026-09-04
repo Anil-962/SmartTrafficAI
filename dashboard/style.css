@@ -128,3 +128,8 @@ font-size:16px;
 }
 
 }
+#trafficEvent{
+    font-weight:bold;
+    padding:5px 10px;
+    border-radius:6px;
+}

@@ -102,6 +102,41 @@ private:
     int distanceToVehicles(
         float distance
     );
+enum TrafficEventType
+{
+    EVENT_NONE,
+    EVENT_CONGESTION,
+    EVENT_SUDDEN_TRAFFIC,
+    EVENT_LANE_BLOCKED,
+    EVENT_ABNORMAL
+};
+
+TrafficEventType currentEvent;
+
+unsigned long eventStartTime;
+
+int previousHighestDensity;
+unsigned long densityChangeTime;
+TrafficEventType pendingEvent;
+
+unsigned long pendingEventStartTime;
+
+const unsigned long EVENT_CONFIRMATION_TIME = 5000;
+enum TrafficSeverity
+{
+    SEVERITY_NORMAL,
+    SEVERITY_LOW,
+    SEVERITY_MEDIUM,
+    SEVERITY_HIGH,
+    SEVERITY_CRITICAL
+};
+
+TrafficSeverity currentSeverity;
+
+
+void calculateEventSeverity();
+void detectTrafficEvents();
+
 
 public:
 
@@ -111,8 +146,11 @@ public:
     void begin();
 
     void update();
+    String getTrafficEvent();
 
     TrafficStatus getStatus();
+    String getSeverityName();
+    String getEventName();
 
     Lane* getLanes();
 
