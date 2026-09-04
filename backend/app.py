@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 from backend.database.db import initialize_database
 from backend.services.traffic_logger import log_traffic_status
 
 
 app = Flask(__name__)
-
+CORS(app)
 
 # Initialize SQLite database when Flask starts
 initialize_database()
