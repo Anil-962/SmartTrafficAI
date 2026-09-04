@@ -1,4 +1,4 @@
-const url = "http://192.168.137.68/status";
+const url = "http://192.168.137.99/status";
 
 async function updateDashboard()
 {
@@ -17,9 +17,17 @@ async function updateDashboard()
         // System Information
         // -------------------------
 
-        document.getElementById("currentLane").textContent = data.currentLane;
-        document.getElementById("signalState").textContent = data.signalState;
-        document.getElementById("rssi").textContent = data.rssi;
+      document.getElementById("currentLane").textContent =
+         data.currentLane;
+
+        document.getElementById("signalState").textContent =
+         data.signalState;
+
+        document.getElementById("trafficEvent").textContent =
+          data.trafficEvent || "NONE";
+
+        document.getElementById("rssi").textContent =
+             data.rssi;
         document.getElementById("uptime").textContent = data.uptime;
         document.getElementById("version").textContent = data.version;
 
@@ -35,9 +43,6 @@ async function updateDashboard()
                 .remove("active");
         }
 
-        // -------------------------
-        // Update every lane
-        // -------------------------
 
         data.lanes.forEach((lane,index)=>
         {
