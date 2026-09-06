@@ -441,6 +441,18 @@ void HttpServer::begin(
             this
         )
     );
+        server.on(
+        "/emergency",
+        HTTP_OPTIONS,
+        [this]()
+        {
+            server.send(
+                204,
+                "text/plain",
+                ""
+            );
+        }
+    );
 
     server.on(
         "/clear-emergency",

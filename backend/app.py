@@ -3,10 +3,11 @@ from flask_cors import CORS
 
 from backend.database.db import initialize_database
 from backend.services.traffic_logger import log_traffic_status
-
+from backend.routes.analytics import analytics_bp
 
 app = Flask(__name__)
 CORS(app)
+app.register_blueprint(analytics_bp)
 
 # Initialize SQLite database when Flask starts
 initialize_database()

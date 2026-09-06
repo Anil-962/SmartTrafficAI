@@ -31,33 +31,51 @@
 
         </div>
 
-        <nav class="navigation">
+       <nav class="navigation">
 
-            <button class="nav-button active" data-section="dashboard">
-                Dashboard
-            </button>
+    <button
+        class="nav-button active"
+        data-section="dashboard"
+        aria-selected="true">
+        Dashboard
+    </button>
 
-            <button class="nav-button" data-section="liveTraffic">
-                Live Traffic
-            </button>
+    <button
+        class="nav-button"
+        data-section="liveTraffic"
+        aria-selected="false">
+        Live Traffic
+    </button>
 
-            <button class="nav-button" data-section="analytics">
-                Analytics
-            </button>
+    <button
+        class="nav-button"
+        data-section="analytics"
+        aria-selected="false">
+        Analytics
+    </button>
 
-            <button class="nav-button" data-section="events">
-                Events
-            </button>
+    <button
+        class="nav-button"
+        data-section="events"
+        aria-selected="false">
+        Events
+    </button>
 
-            <button class="nav-button" data-section="emergency">
-                Emergency
-            </button>
+    <button
+        class="nav-button"
+        data-section="emergency"
+        aria-selected="false">
+        Emergency
+    </button>
 
-            <button class="nav-button" data-section="system">
-                System
-            </button>
+    <button
+        class="nav-button"
+        data-section="system"
+        aria-selected="false">
+        System
+    </button>
 
-        </nav>
+</nav>
 
     </header>
 
@@ -115,6 +133,20 @@
                 <p id="trafficSeverity">NORMAL</p>
 
             </div>
+            <div class="overview-card emergency-overview-card">
+
+            <div class="overview-label">
+                Emergency Priority
+            </div>
+
+            <div
+                id="dashboardEmergencyStatus"
+                class="overview-value emergency-overview-inactive"
+            >
+                NONE
+            </div>
+
+        </div>
 
         </div>
 
@@ -143,6 +175,11 @@
             <div class="lane-card" id="lane0">
 
                 <h3 id="name0">North</h3>
+                <span
+                    id="emergency0"
+                    class="lane-emergency-badge">
+                    EMERGENCY
+                </span>
 
                 <p>
                     Vehicles :
@@ -165,6 +202,11 @@
             <div class="lane-card" id="lane1">
 
                 <h3 id="name1">East</h3>
+                <span
+                    id="emergency1"
+                    class="lane-emergency-badge">
+                    EMERGENCY
+                </span>
 
                 <p>
                     Vehicles :
@@ -187,6 +229,11 @@
             <div class="lane-card" id="lane2">
 
                 <h3 id="name2">South</h3>
+                <span
+                    id="emergency2"
+                    class="lane-emergency-badge">
+                    EMERGENCY
+                </span>
 
                 <p>
                     Vehicles :
@@ -209,6 +256,11 @@
             <div class="lane-card" id="lane3">
 
                 <h3 id="name3">West</h3>
+                <span
+                    id="emergency3"
+                    class="lane-emergency-badge">
+                    EMERGENCY
+                </span>
 
                 <p>
                     Vehicles :
@@ -344,6 +396,35 @@
             </p>
 
         </div>
+                <div class="analytics-chart-card">
+            <h3>Traffic Volume by Lane</h3>
+
+            <div class="chart-container">
+                <canvas id="trafficLaneChart"></canvas>
+            </div>
+        </div>
+        <div class="analytics-chart-card">
+    <h3>Weekly Traffic Comparison</h3>
+
+    <div class="chart-container">
+        <canvas id="trafficPeriodChart"></canvas>
+    </div>
+</div>
+
+<div class="analytics-chart-card">
+    <h3>Monthly Traffic Comparison</h3>
+
+    <div class="chart-container">
+        <canvas id="trafficMonthChart"></canvas>
+    </div>
+</div>
+<div class="analytics-chart-card">
+    <h3>24-Hour Traffic Trend</h3>
+
+    <div class="chart-container">
+        <canvas id="trafficTrendChart"></canvas>
+    </div>
+</div>
 
     </section>
 
@@ -392,6 +473,56 @@
             </p>
 
         </div>
+        <div class="analytics-grid">
+
+    <div class="analytics-chart-card">
+        <h3>Event Type Distribution</h3>
+
+        <div class="chart-container">
+            <canvas id="eventTypeChart"></canvas>
+        </div>
+    </div>
+
+    <div class="analytics-chart-card">
+        <h3>Event Severity Distribution</h3>
+
+        <div class="chart-container">
+            <canvas id="eventSeverityChart"></canvas>
+        </div>
+    </div>
+
+</div>
+<div class="analytics-chart-card event-history-card">
+
+    <h3>Recent Traffic Events</h3>
+
+    <div class="event-table-container">
+
+        <table class="event-history-table">
+
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Event</th>
+                    <th>Severity</th>
+                </tr>
+            </thead>
+
+            <tbody id="eventHistoryBody">
+
+                <tr>
+                    <td colspan="3">
+                        No event history available.
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
 
     </section>
 
@@ -402,44 +533,91 @@
 
     <section id="emergency" class="dashboard-section">
 
-        <div class="section-header">
-
+            <div class="section-header">
             <h2>Emergency Vehicle Priority</h2>
+            <p>Manage emergency vehicle priority and traffic signal override.</p>
+        </div>
 
-            <p>
-                Emergency traffic priority control.
-            </p>
+        <div class="emergency-card">
+
+            <div class="emergency-status-panel">
+
+                <div class="emergency-status-label">
+                    Emergency Status
+                </div>
+
+                <div
+                    id="emergencyStatus"
+                    class="emergency-status inactive"
+                >
+                    NO ACTIVE EMERGENCY
+                </div>
+
+            </div>
+
+            <div class="emergency-priority-panel">
+
+                <div class="emergency-status-label">
+                    Priority Lane
+                </div>
+
+                <div
+                    id="emergencyPriorityLane"
+                    class="emergency-priority-lane"
+                >
+                    NONE
+                </div>
+
+            </div>
 
         </div>
 
 
         <div class="emergency-card">
 
-            <h3>Emergency Status</h3>
+            <h3>Activate Emergency Priority</h3>
 
-            <p id="emergencyStatus">
-                No emergency active
+            <p>
+                Select the lane requiring emergency vehicle priority.
             </p>
 
-        </div>
+            <div class="emergency-lanes">
 
+                <button
+                    class="emergency-button"
+                    data-lane="North"
+                >
+                    North
+                </button>
 
-        <div class="emergency-lanes">
+                <button
+                    class="emergency-button"
+                    data-lane="East"
+                >
+                    East
+                </button>
 
-            <button class="emergency-button" data-lane="North">
-                North
-            </button>
+                <button
+                    class="emergency-button"
+                    data-lane="South"
+                >
+                    South
+                </button>
 
-            <button class="emergency-button" data-lane="East">
-                East
-            </button>
+                <button
+                    class="emergency-button"
+                    data-lane="West"
+                >
+                    West
+                </button>
 
-            <button class="emergency-button" data-lane="South">
-                South
-            </button>
+            </div>
 
-            <button class="emergency-button" data-lane="West">
-                West
+            <button
+                id="clearEmergencyButton"
+                class="emergency-clear-button"
+            >
+                Clear Emergency
             </button>
 
         </div>
@@ -511,7 +689,7 @@
 
 </div>
 
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="app.js"></script>
 
 </body>
