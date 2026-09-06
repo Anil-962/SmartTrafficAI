@@ -60,6 +60,8 @@ flowchart TD
     BE --> DB
     DB --> BE
     BE --> WD
+```
+
 ## 3. Hardware Architecture
 
 The hardware layer consists of two ESP32 boards.
