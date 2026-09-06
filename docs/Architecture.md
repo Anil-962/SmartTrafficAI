@@ -1,4 +1,5 @@
 # System Architecture
+![SmartTrafficAI System Architecture](../diagrams/system-architecture.png)
 
 ## 1. Overview
 
