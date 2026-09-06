@@ -17,84 +17,500 @@
 
 <div class="container">
 
-<header>
+    <!-- =========================
+         HEADER
+    ========================== -->
 
-<h1>🚦 SmartTrafficAI</h1>
+    <header class="main-header">
 
-<p>Adaptive Traffic Management System</p>
+        <div class="brand">
 
-</header>
+            <h1>SmartTrafficAI</h1>
 
-<div class="lane-grid">
+            <p>Adaptive Smart Traffic Management System</p>
 
-<div class="lane-card" id="lane0">
+        </div>
 
-<h2 id="name0">North</h2>
+        <nav class="navigation">
 
-<p>🚗 Vehicles : <span id="vehicles0">0</span></p>
+            <button class="nav-button active" data-section="dashboard">
+                Dashboard
+            </button>
 
-<p>⏱ Waiting : <span id="waiting0">0</span> sec</p>
+            <button class="nav-button" data-section="liveTraffic">
+                Live Traffic
+            </button>
 
-<p>⭐ Priority : <span id="priority0">0</span></p>
+            <button class="nav-button" data-section="analytics">
+                Analytics
+            </button>
+
+            <button class="nav-button" data-section="events">
+                Events
+            </button>
+
+            <button class="nav-button" data-section="emergency">
+                Emergency
+            </button>
+
+            <button class="nav-button" data-section="system">
+                System
+            </button>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =========================
+         DASHBOARD SECTION
+    ========================== -->
+
+    <section id="dashboard" class="dashboard-section active-section">
+
+        <div class="section-header">
+
+            <h2>Traffic Control Overview</h2>
+
+            <p>
+                Real-time overview of the smart traffic management system.
+            </p>
+
+        </div>
+
+
+        <div class="overview-grid">
+
+            <div class="overview-card">
+
+                <h3>Current Lane</h3>
+
+                <p id="currentLane">-</p>
+
+            </div>
+
+
+            <div class="overview-card">
+
+                <h3>Signal State</h3>
+
+                <p id="signalState">-</p>
+
+            </div>
+
+
+            <div class="overview-card">
+
+                <h3>Traffic Event</h3>
+
+                <p id="trafficEvent">NONE</p>
+
+            </div>
+
+
+            <div class="overview-card">
+
+                <h3>Traffic Severity</h3>
+
+                <p id="trafficSeverity">NORMAL</p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         LIVE TRAFFIC SECTION
+    ========================== -->
+
+    <section id="liveTraffic" class="dashboard-section">
+
+        <div class="section-header">
+
+            <h2>Live Traffic</h2>
+
+            <p>
+                Real-time traffic conditions from the ESP32 sensor system.
+            </p>
+
+        </div>
+
+
+        <div class="lane-grid">
+
+            <div class="lane-card" id="lane0">
+
+                <h3 id="name0">North</h3>
+
+                <p>
+                    Vehicles :
+                    <span id="vehicles0">0</span>
+                </p>
+
+                <p>
+                    Waiting :
+                    <span id="waiting0">0</span> sec
+                </p>
+
+                <p>
+                    Priority :
+                    <span id="priority0">0</span>
+                </p>
+
+            </div>
+
+
+            <div class="lane-card" id="lane1">
+
+                <h3 id="name1">East</h3>
+
+                <p>
+                    Vehicles :
+                    <span id="vehicles1">0</span>
+                </p>
+
+                <p>
+                    Waiting :
+                    <span id="waiting1">0</span> sec
+                </p>
+
+                <p>
+                    Priority :
+                    <span id="priority1">0</span>
+                </p>
+
+            </div>
+
+
+            <div class="lane-card" id="lane2">
+
+                <h3 id="name2">South</h3>
+
+                <p>
+                    Vehicles :
+                    <span id="vehicles2">0</span>
+                </p>
+
+                <p>
+                    Waiting :
+                    <span id="waiting2">0</span> sec
+                </p>
+
+                <p>
+                    Priority :
+                    <span id="priority2">0</span>
+                </p>
+
+            </div>
+
+
+            <div class="lane-card" id="lane3">
+
+                <h3 id="name3">West</h3>
+
+                <p>
+                    Vehicles :
+                    <span id="vehicles3">0</span>
+                </p>
+
+                <p>
+                    Waiting :
+                    <span id="waiting3">0</span> sec
+                </p>
+
+                <p>
+                    Priority :
+                    <span id="priority3">0</span>
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         ANALYTICS SECTION
+    ========================== -->
+
+    <section id="analytics" class="dashboard-section">
+
+        <div class="section-header">
+
+            <h2>Traffic Analytics</h2>
+
+            <p>
+                Historical traffic analysis from the SQLite database.
+            </p>
+
+        </div>
+
+
+        <div class="analytics-grid">
+
+            <div class="analytics-card">
+
+                <h3>Today</h3>
+
+                <p>
+                    Total Observations :
+                    <span id="todayTotal">0</span>
+                </p>
+
+                <p>
+                    Average Vehicles :
+                    <span id="todayAverage">0</span>
+                </p>
+
+                <p>
+                    Log Count :
+                    <span id="todayLogs">0</span>
+                </p>
+
+            </div>
+
+
+            <div class="analytics-card">
+
+                <h3>This Week</h3>
+
+                <p>
+                    Total Observations :
+                    <span id="weekTotal">0</span>
+                </p>
+
+                <p>
+                    Average Vehicles :
+                    <span id="weekAverage">0</span>
+                </p>
+
+                <p>
+                    Log Count :
+                    <span id="weekLogs">0</span>
+                </p>
+
+            </div>
+
+
+            <div class="analytics-card">
+
+                <h3>This Month</h3>
+
+                <p>
+                    Total Observations :
+                    <span id="monthTotal">0</span>
+                </p>
+
+                <p>
+                    Average Vehicles :
+                    <span id="monthAverage">0</span>
+                </p>
+
+                <p>
+                    Log Count :
+                    <span id="monthLogs">0</span>
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="lane-analysis-card">
+
+            <h3>Lane Analysis</h3>
+
+            <p>
+                North :
+                <span id="northAverage">0</span>
+            </p>
+
+            <p>
+                East :
+                <span id="eastAverage">0</span>
+            </p>
+
+            <p>
+                South :
+                <span id="southAverage">0</span>
+            </p>
+
+            <p>
+                West :
+                <span id="westAverage">0</span>
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         EVENTS SECTION
+    ========================== -->
+
+    <section id="events" class="dashboard-section">
+
+        <div class="section-header">
+
+            <h2>Traffic Events</h2>
+
+            <p>
+                Detected traffic conditions and event severity.
+            </p>
+
+        </div>
+
+
+        <div class="event-card">
+
+            <h3>Current Event</h3>
+
+            <p>
+                Event :
+                <span id="eventName">NONE</span>
+            </p>
+
+            <p>
+                Severity :
+                <span id="eventSeverity">NORMAL</span>
+            </p>
+
+        </div>
+
+
+        <div class="event-card">
+
+            <h3>Event Detection</h3>
+
+            <p>
+                The system monitors traffic density and identifies
+                abnormal traffic conditions.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         EMERGENCY SECTION
+    ========================== -->
+
+    <section id="emergency" class="dashboard-section">
+
+        <div class="section-header">
+
+            <h2>Emergency Vehicle Priority</h2>
+
+            <p>
+                Emergency traffic priority control.
+            </p>
+
+        </div>
+
+
+        <div class="emergency-card">
+
+            <h3>Emergency Status</h3>
+
+            <p id="emergencyStatus">
+                No emergency active
+            </p>
+
+        </div>
+
+
+        <div class="emergency-lanes">
+
+            <button class="emergency-button" data-lane="North">
+                North
+            </button>
+
+            <button class="emergency-button" data-lane="East">
+                East
+            </button>
+
+            <button class="emergency-button" data-lane="South">
+                South
+            </button>
+
+            <button class="emergency-button" data-lane="West">
+                West
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         SYSTEM SECTION
+    ========================== -->
+
+    <section id="system" class="dashboard-section">
+
+        <div class="section-header">
+
+            <h2>System Information</h2>
+
+            <p>
+                Controller, network and system health information.
+            </p>
+
+        </div>
+
+
+        <div class="system-grid">
+
+            <div class="system-card">
+
+                <h3>WiFi Status</h3>
+
+                <p id="wifiStatus">-</p>
+
+            </div>
+
+
+            <div class="system-card">
+
+                <h3>WiFi RSSI</h3>
+
+                <p>
+                    <span id="rssi">-</span> dBm
+                </p>
+
+            </div>
+
+
+            <div class="system-card">
+
+                <h3>Uptime</h3>
+
+                <p>
+                    <span id="uptime">0</span> sec
+                </p>
+
+            </div>
+
+
+            <div class="system-card">
+
+                <h3>Firmware Version</h3>
+
+                <p id="version">-</p>
+
+            </div>
+
+        </div>
+
+    </section>
 
 </div>
 
-<div class="lane-card" id="lane1">
-
-<h2 id="name1">East</h2>
-
-<p>🚗 Vehicles : <span id="vehicles1">0</span></p>
-
-<p>⏱ Waiting : <span id="waiting1">0</span> sec</p>
-
-<p>⭐ Priority : <span id="priority1">0</span></p>
-
-</div>
-
-<div class="lane-card" id="lane2">
-
-<h2 id="name2">South</h2>
-
-<p>🚗 Vehicles : <span id="vehicles2">0</span></p>
-
-<p>⏱ Waiting : <span id="waiting2">0</span> sec</p>
-
-<p>⭐ Priority : <span id="priority2">0</span></p>
-
-</div>
-
-<div class="lane-card" id="lane3">
-
-<h2 id="name3">West</h2>
-
-<p>🚗 Vehicles : <span id="vehicles3">0</span></p>
-
-<p>⏱ Waiting : <span id="waiting3">0</span> sec</p>
-
-<p>⭐ Priority : <span id="priority3">0</span></p>
-
-</div>
-
-</div>
-
-<div class="status-card">
-
-<h2>System Status</h2>
-
-<p>Current Lane : <span id="currentLane">-</span></p>
-
-<p>Signal State : <span id="signalState">-</span></p>
-<p>Traffic Event : <span id="trafficEvent">NONE</span></p>
-
-<p>WiFi RSSI : <span id="rssi">-</span> dBm</p>
-
-<p>Uptime : <span id="uptime">0</span> sec</p>
-
-<p>Version : <span id="version">-</span></p>
-
-</div>
-
-</div>
 
 <script src="app.js"></script>
 
