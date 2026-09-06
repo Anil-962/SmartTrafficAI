@@ -1,6 +1,6 @@
 # System Architecture
 ![SmartTrafficAI System Architecture](../diagrams/system-architecture.png)
-
+  
 ## 1. Overview
 
 The IoT-Based Adaptive Smart Traffic Management System is designed as a distributed traffic-control system consisting of two ESP32 boards, ultrasonic sensors, traffic-light modules, a Flask backend, SQLite database, and a web-based dashboard.
