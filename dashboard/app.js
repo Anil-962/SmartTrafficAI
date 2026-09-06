@@ -1,4 +1,5 @@
-const url = "http://192.168.137.99/status";
+const url = "http://192.168.137.231/status";
+const loggingUrl = "http://10.226.61.224:5000/api/traffic/log";
 
 async function updateDashboard()
 {
@@ -12,20 +13,6 @@ async function updateDashboard()
         }
 
         const data = await response.json();
-        // -------------------------
-// Log traffic data to Flask
-// -------------------------
-
-    fetch("http://127.0.0.1:5000/api/traffic/log", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    })
-    .catch(error => {
-        console.error("Traffic logging error:", error);
-    });
 
         // -------------------------
         // System Information
@@ -89,7 +76,45 @@ async function updateDashboard()
         document.getElementById("currentLane").textContent="Disconnected";
     }
 }
+async function logTrafficStatus()
+{
+    try
+    {
+        const response = await fetch(url);
 
+        if(!response.ok)
+        {
+            throw new Error("ESP32 HTTP Error " + response.status);
+        }
+
+        const data = await response.json();
+
+        const logResponse = await fetch(loggingUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        if(!logResponse.ok)
+        {
+            throw new Error(
+                "Logging HTTP Error " + logResponse.status
+            );
+        }
+
+        const result = await logResponse.json();
+
+        console.log("Traffic log:", result.message);
+    }
+    catch(error)
+    {
+        console.error("Traffic logging failed:", error);
+    }
+}
 updateDashboard();
 
 setInterval(updateDashboard,1000);
+
+setInterval(logTrafficStatus,30000);

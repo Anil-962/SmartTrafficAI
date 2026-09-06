@@ -4,6 +4,6 @@
 #define WIFI_SSID "Ani Desktop"
 #define WIFI_PASSWORD "pay and use"
 
-#define MASTER_IP "192.168.137.99"
+#define MASTER_IP "192.168.137.231"
 
 #endif
