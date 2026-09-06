@@ -361,7 +361,7 @@ The web dashboard provides the following sections:
 
 ![Emergency Priority](docs/images/emergency.png)
 
-> Add the actual screenshots to `docs/images/` using the filenames above.
+> Screenshots shown above are captured from the working SmartTrafficAI dashboard prototype.
 
 ---
 
@@ -563,4 +563,4 @@ https://github.com/Anil-962/SmartTrafficAI
 
 This project is developed as an academic major project.
 
-If a specific open-source license is required for distribution, it can be added to the repository separately.
+The source code is currently provided for academic and demonstration purposes.
