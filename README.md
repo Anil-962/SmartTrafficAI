@@ -1,112 +1,95 @@
-# SmartTrafficAI
+# IoT-Based Adaptive Smart Traffic Management System
 
-## IoT-Based Adaptive Smart Traffic Management System with Emergency Vehicle Priority
+## SmartTrafficAI
 
-SmartTrafficAI is an IoT-based intelligent traffic management system designed to monitor traffic density, dynamically control traffic signals, detect traffic events, provide emergency vehicle priority, and maintain historical traffic data for analytics.
+An IoT-based adaptive traffic management system that monitors traffic conditions across four lanes and dynamically manages traffic signals using vehicle-density information, waiting time, traffic events, and emergency vehicle priority.
 
-The system combines ESP32-based traffic control, ultrasonic vehicle detection, adaptive signal timing, emergency signal override, a Flask backend, SQLite database, and a web-based monitoring dashboard.
+The system combines **ESP32-based embedded control, ultrasonic sensing, adaptive signal scheduling, Flask REST APIs, SQLite data logging, and a real-time web dashboard**.
+
+---
+
+## Project Overview
+
+Traditional fixed-time traffic signals provide the same signal duration regardless of the actual traffic condition.
+
+SmartTrafficAI uses real-time traffic information to make lane scheduling more adaptive.
+
+The system:
+
+- Monitors four traffic lanes
+- Estimates traffic conditions using ultrasonic sensors
+- Calculates lane priority
+- Dynamically adjusts Green signal duration
+- Tracks lane waiting time
+- Detects traffic events
+- Classifies event severity
+- Provides emergency vehicle priority
+- Stores historical traffic information
+- Provides traffic analytics
+- Displays system information through a web dashboard
 
 ---
 
 ## Key Features
 
-### 1. Adaptive Traffic Signal Control
+### Adaptive Traffic Signal Control
 
-The system dynamically determines green-light duration based on traffic density and lane waiting time.
+Traffic signal scheduling is based on current lane conditions rather than only a fixed sequence.
 
-- Low traffic → shorter green duration
-- Higher traffic → longer green duration
-- Waiting lanes receive additional priority
-- Green time is bounded by configured minimum and maximum limits
+### Traffic Density Monitoring
 
-The implemented adaptive timing supports approximately:
+Four HC-SR04 ultrasonic sensors provide distance measurements used to estimate traffic conditions for the four lanes.
 
-| Traffic Density | Base Green Time |
-|---|---:|
-| 0 vehicles | 10 seconds |
-| 2 vehicles | 15 seconds |
-| 4 vehicles | 20 seconds |
-| 6 vehicles | 25 seconds |
-| 8 vehicles | 30 seconds |
-| 10+ vehicles | 35 seconds |
+### Dynamic Green Timing
 
-Additional waiting-time bonuses are applied to reduce starvation of less busy lanes.
+Green duration is adjusted according to traffic demand and waiting time.
 
----
+### Lane Priority Calculation
 
-### 2. IoT-Based Traffic Detection
+The controller calculates a priority score using traffic conditions, waiting time, and emergency priority.
 
-Four HC-SR04 ultrasonic sensors monitor the four traffic lanes:
+### Traffic Event Detection
 
-- North
-- East
-- South
-- West
+The system supports detection of traffic conditions such as:
 
-A dedicated Sensor ESP32 collects distance measurements and sends traffic information to the Master ESP32.
+- Congestion
+- Sudden traffic changes
+- Possible lane blockage
+- Abnormal traffic conditions
 
----
+### Traffic Severity
 
-### 3. Traffic Event Detection
+Detected traffic events can be classified as:
 
-The system identifies abnormal traffic conditions using measured traffic-density information.
+- Normal
+- Low
+- Medium
+- High
+- Critical
 
-Supported event types include:
+### Emergency Vehicle Priority
 
-- `NONE`
-- `CONGESTION`
-- `SUDDEN_TRAFFIC`
-- `LANE_BLOCKED`
-- `ABNORMAL`
+An operator can select a lane for emergency priority through the dashboard.
 
-Events use stability confirmation to reduce false detections caused by short-term sensor fluctuations.
+### Historical Traffic Logging
 
----
+Traffic information is periodically stored using a Flask backend and SQLite database.
 
-### 4. Traffic Event Severity
+### Traffic Analytics
 
-Detected traffic events are classified into severity levels:
+Historical traffic data is used to provide:
 
-- `NORMAL`
-- `LOW`
-- `MEDIUM`
-- `HIGH`
-- `CRITICAL`
+- Daily statistics
+- Weekly statistics
+- Monthly statistics
+- Lane-based analysis
+- Traffic trends
+- Event statistics
+- Event history
 
-This allows the dashboard to distinguish normal traffic conditions from increasingly serious traffic situations.
+### Real-Time Web Dashboard
 
----
-
-### 5. Emergency Vehicle Priority
-
-The system provides manual emergency vehicle priority through the dashboard.
-
-An operator can select:
-
-- North
-- East
-- South
-- West
-
-The selected lane receives emergency priority through the Master ESP32.
-
-The dashboard provides:
-
-- Emergency activation
-- Active emergency status
-- Priority lane display
-- Emergency lane highlighting
-- Emergency badge
-- Emergency clear operation
-- Automatic emergency-status synchronization
-
----
-
-### 6. Real-Time Web Dashboard
-
-The dashboard provides a centralized interface for monitoring the traffic system.
-
-Main sections include:
+The dashboard provides separate sections for:
 
 - Dashboard
 - Live Traffic
@@ -115,208 +98,91 @@ Main sections include:
 - Emergency
 - System
 
-The interface provides real-time information including:
+---
 
-- Current traffic lane
-- Current signal state
-- Traffic event
-- Traffic severity
-- Vehicle count
-- Waiting time
-- Lane priority
-- Emergency status
+## Hardware Components
+
+| Component | Quantity | Purpose |
+|---|---:|---|
+| ESP32 Development Board | 2 | One Master Traffic Controller and one Sensor Node |
+| HC-SR04 Ultrasonic Sensor | 4 | Traffic vehicle/distance detection |
+| 4-Way Traffic Light Module | 4 | Traffic signal control for four lanes |
+| Breadboard | 1 or more | Hardware prototyping |
+| Jumper Wires | As required | Electrical connections |
+| USB Cable | As required | ESP32 programming and power |
+| Power Supply | As required | System power |
 
 ---
 
-### 7. Historical Traffic Logging
+## Software Stack
 
-Traffic status is periodically recorded by the dashboard through the Flask backend.
-
-The backend stores traffic information in SQLite.
-
-Recorded information includes:
-
-- Timestamp
-- North vehicle count
-- East vehicle count
-- South vehicle count
-- West vehicle count
-- Current lane
-- Signal state
-- Traffic event
-- Traffic severity
-
-The SQLite database is automatically initialized when the Flask backend starts.
-
----
-
-### 8. Traffic Analytics
-
-Historical traffic data is processed by the Flask backend and displayed on the dashboard.
-
-The Analytics section provides:
-
-- Daily statistics
-- Weekly statistics
-- Monthly statistics
-- Average traffic values
-- Lane-level analysis
-- Traffic trend charts
-- Event statistics
-- Event severity statistics
-- Event history
+| Technology | Purpose |
+|---|---|
+| Arduino IDE | ESP32 firmware development |
+| C/C++ | Embedded firmware |
+| ESP32 Wi-Fi | Network communication |
+| HTTP | System API communication |
+| JSON | Data exchange |
+| Python | Backend development |
+| Flask | REST API and backend server |
+| Flask-CORS | Cross-origin communication |
+| SQLite | Historical traffic storage |
+| HTML5 | Dashboard structure |
+| CSS3 | Dashboard styling |
+| JavaScript | Dashboard logic and API communication |
+| Chart.js | Analytics visualization |
+| Git | Version control |
+| GitHub | Source-code hosting |
 
 ---
 
 ## System Architecture
 
 ```text
-                    ┌──────────────────────┐
-                    │   Ultrasonic Sensors │
-                    │       HC-SR04 × 4    │
-                    └──────────┬───────────┘
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │     Sensor ESP32     │
-                    │ Traffic Measurement  │
-                    └──────────┬───────────┘
-                               │
-                         HTTP / JSON
-                               │
-                               ▼
-                    ┌──────────────────────┐
-                    │    Master ESP32      │
-                    │  Traffic Controller  │
-                    └──────────┬───────────┘
-                               │
-              ┌────────────────┼────────────────┐
-              │                │                │
-              ▼                ▼                ▼
-       Traffic Signals    Event Detection   Emergency
-       Adaptive Control    & Severity        Priority
-              │
-              ▼
-       ┌──────────────────────┐
-       │    Web Dashboard     │
-       │    HTML / CSS / JS   │
-       └──────────┬───────────┘
-                  │
-               REST API
-                  │
-                  ▼
-       ┌──────────────────────┐
-       │    Flask Backend     │
-       │      Port 5000       │
-       └──────────┬───────────┘
-                  │
-                  ▼
-       ┌──────────────────────┐
-       │       SQLite         │
-       │    Traffic Logs      │
-       └──────────────────────┘
-## Hardware Components
+                  ┌──────────────────────┐
+                  │   HC-SR04 Sensors    │
+                  │      4 Lanes         │
+                  └──────────┬───────────┘
+                             │
+                             ↓
+                  ┌──────────────────────┐
+                  │    Sensor ESP32      │
+                  │  Sensor Processing   │
+                  └──────────┬───────────┘
+                             │
+                        JSON Data
+                             │
+                             ↓
+                  ┌──────────────────────┐
+                  │     Master ESP32     │
+                  │  Traffic Controller  │
+                  └──────────┬───────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ↓              ↓              ↓
+       Traffic Signals   Event Logic   Emergency
+                             │
+                             ↓
+                  ┌──────────────────────┐
+                  │    Web Dashboard     │
+                  └──────────┬───────────┘
+                             │
+                             ↓
+                  ┌──────────────────────┐
+                  │    Flask Backend     │
+                  └──────────┬───────────┘
+                             │
+                             ↓
+                  ┌──────────────────────┐
+                  │    SQLite Database   │
+                  └──────────────────────┘
+```
 
-| Component | Quantity | Purpose |
-|---|---:|---|
-| ESP32 Development Board | 2 | One ESP32 is used as the Master Traffic Controller and the second ESP32 is used as the Sensor Node |
-| HC-SR04 Ultrasonic Sensor | 4 | Detects vehicle presence and estimates traffic density for the four lanes |
-| 4-Way Traffic Light Module | 4 | Controls the Red, Yellow, and Green signals for North, East, South, and West lanes |
-| Breadboard | 1 or more | Used for prototyping and connecting the electronic components |
-| Jumper Wires | As required | Used for electrical connections between ESP32, sensors, and traffic light modules |
-| External Power Supply / USB Power | As required | Provides power to the ESP32 boards and connected components |
+For the detailed architecture, see:
 
-### Hardware Architecture
+**[Architecture Documentation](docs/Architecture.md)**
 
-The hardware consists of two ESP32 boards.
-
-- **Sensor ESP32:** Collects distance measurements from four HC-SR04 ultrasonic sensors and sends the sensor data to the Master ESP32.
-- **Master ESP32:** Processes traffic information, calculates lane priority, controls the four traffic-light modules, handles emergency priority, and provides the HTTP interface used by the dashboard.
-
-The four traffic lanes are:
-
-- North
-- East
-- South
-- West
-
-## Software Stack
-
-### Embedded System
-
-| Technology | Purpose |
-|---|---|
-| Arduino IDE | Development, compilation, and uploading of firmware to the ESP32 boards |
-| C/C++ | Programming language used for the ESP32 firmware |
-| ESP32 Wi-Fi | Provides wireless communication between the traffic-control system and the network |
-| HTTP | Used for communication between the ESP32 and dashboard/sensor components |
-| JSON | Used to exchange structured traffic and sensor data |
-
-### Backend
-
-| Technology | Purpose |
-|---|---|
-| Python | Backend programming language |
-| Flask | Provides the REST API and backend web server |
-| Flask-CORS | Enables cross-origin communication between the dashboard and backend |
-| SQLite | Stores historical traffic logs and event information |
-| REST API | Provides communication between the dashboard and backend services |
-
-### Dashboard
-
-| Technology | Purpose |
-|---|---|
-| HTML5 | Defines the dashboard structure and user interface |
-| CSS3 | Provides the dashboard layout, styling, responsive design, and visual effects |
-| JavaScript | Handles real-time data updates, API communication, navigation, and dashboard logic |
-| Chart.js | Displays traffic analytics and event data using charts |
-
-### Development and Version Control
-
-| Tool | Purpose |
-|---|---|
-| Git | Source-code version control |
-| GitHub | Remote repository and project version management |
-| Visual Studio Code | Source-code editing and project development |
-| Arduino IDE | ESP32 firmware development and deployment |
-## Project Structure
-
-```text
-Smart-Traffic-Management-System/
-│
-├── backend/
-│   ├── api/
-│   ├── database/
-│   │   ├── db.py
-│   │   └── traffic_logs.db
-│   ├── models/
-│   │   └── traffic_log.py
-│   ├── routes/
-│   │   └── analytics.py
-│   ├── services/
-│   │   └── traffic_logger.py
-│   └── app.py
-│
-├── dashboard/
-│   ├── index.html
-│   ├── app.js
-│   └── style.css
-│
-├── firmware/
-│   ├── sensor_node/
-│   ├── traffic_controller/
-│   └── Traffic_Light_Test/
-│
-├── diagrams/
-│
-├── docs/
-│   ├── API.md
-│   ├── Architecture.md
-│   ├── Setup.md
-│   └── UserGuide.md
-│
-├── .gitignore
-└── README.md
+---
 
 ## Traffic Signal Control
 
@@ -327,919 +193,374 @@ The Master ESP32 controls four traffic lanes:
 - South
 - West
 
-Each lane has an independent traffic-light module with Red, Yellow, and Green signals.
-
-The traffic controller uses a **Finite State Machine (FSM)** to manage signal transitions safely and predictably.
-
-### Signal Control States
-
-| State | Description |
-|---|---|
-| `PRE_GREEN_YELLOW_STATE` | Activates the selected lane's Yellow signal before Green |
-| `GREEN_STATE` | Allows traffic to move through the selected lane |
-| `YELLOW_STATE` | Changes the selected lane from Green to Yellow before stopping |
-| `ALL_RED_STATE` | Temporarily keeps all lanes Red before the next lane becomes active |
-
-### Normal Signal Sequence
-
-The normal traffic-control sequence is:
+The controller uses a Finite State Machine (FSM).
 
 ```text
-Select Highest-Priority Lane
-        ↓
-Pre-Green Yellow
-        ↓
-Green
-        ↓
-Yellow
-        ↓
-All Red
-        ↓
-Select Next Highest-Priority Lane
-        ↓
-Repeat
+PRE_GREEN_YELLOW_STATE
+          ↓
+     GREEN_STATE
+          ↓
+    YELLOW_STATE
+          ↓
+   ALL_RED_STATE
+          ↓
+       Next Lane
+```
+
+The signal transition mechanism provides a defined Yellow and All-Red interval between lane changes.
+
+---
 
 ## Adaptive Traffic Management
 
-The system dynamically adjusts traffic signal timing based on the traffic conditions detected in each lane.
+The current base Green timing is:
 
-The four ultrasonic sensors continuously provide distance measurements to the Sensor ESP32. The Sensor ESP32 sends the processed sensor data to the Master ESP32, which uses the information to estimate traffic density and calculate lane priority.
+| Traffic Condition | Green Time |
+|---|---:|
+| 0 vehicles | 10 seconds |
+| 2 vehicles | 15 seconds |
+| 4 vehicles | 20 seconds |
+| 6 vehicles | 25 seconds |
+| 8 vehicles | 30 seconds |
+| 10+ vehicles | 35 seconds |
 
-### Adaptive Traffic Flow
+Waiting-time bonuses are also applied:
 
-```text
-HC-SR04 Sensors
-       ↓
-Sensor ESP32
-       ↓
-Distance Measurements
-       ↓
-Traffic Density Calculation
-       ↓
-Lane Priority Calculation
-       ↓
-Master ESP32
-       ↓
-Adaptive Green Time
-       ↓
-Traffic Signal Control
+| Waiting Time | Additional Time |
+|---|---:|
+| Less than 10 seconds | 0 seconds |
+| 10 seconds or more | +3 seconds |
+| 20 seconds or more | +5 seconds |
 
-## Sensor Integration
+The maximum Green duration is limited to **40 seconds**.
 
-The system uses a dedicated Sensor ESP32 to collect traffic information from four HC-SR04 ultrasonic sensors.
-
-Each sensor corresponds to one traffic lane:
-
-| Lane | Sensor |
-|---|---|
-| North | HC-SR04 |
-| East | HC-SR04 |
-| South | HC-SR04 |
-| West | HC-SR04 |
-
-### Sensor ESP32
-
-The Sensor ESP32 periodically measures the distance between each ultrasonic sensor and the detected vehicle.
-
-The measured values are associated with their respective lanes and transmitted to the Master ESP32 using JSON data.
-
-Example sensor data:
-
-```json
-{
-    "north": 55.0,
-    "east": 31.1,
-    "south": 59.1,
-    "west": -1.0
-}
-
-## Traffic Event Detection
-
-The system monitors traffic conditions continuously and identifies abnormal traffic patterns using the available sensor data.
-
-The current implementation supports the following traffic event types:
-
-| Event | Description |
-|---|---|
-| `NONE` | Normal traffic conditions |
-| `CONGESTION` | High traffic density is detected |
-| `SUDDEN_TRAFFIC` | A significant change in traffic density is detected |
-| `LANE_BLOCKED` | A lane indicates conditions consistent with a blockage |
-| `ABNORMAL` | Traffic conditions do not match the normal operating pattern |
-
-### Event Detection Flow
-
-```text
-Sensor Data
-     ↓
-Traffic Density
-     ↓
-Compare Current and Previous Conditions
-     ↓
-Traffic Event Detection
-     ↓
-Event Stability Check
-     ↓
-Confirmed Traffic Event
-     ↓
-Severity Calculation
-     ↓
-Dashboard + Database
+---
 
 ## Emergency Vehicle Priority
 
-The system provides an emergency vehicle priority mechanism that allows a selected traffic lane to receive the highest scheduling priority.
-
-When emergency priority is activated for a lane, the Master ESP32 updates the lane's emergency status and gives that lane priority over normal traffic during signal scheduling.
-
-### Emergency Priority Flow
+The system allows an operator to assign emergency priority to a selected lane.
 
 ```text
-Emergency Vehicle / Operator
-          ↓
 Emergency Lane Selection
           ↓
 Master ESP32
           ↓
-Emergency Priority Enabled
+Emergency Priority
           ↓
 Highest Lane Priority
           ↓
-Traffic Signal Override
+Signal Scheduling
           ↓
-Emergency Lane Gets Green
+Emergency Lane
+```
 
-## Data Logging and Database
+Lane mapping:
 
-The system stores historical traffic information using a Flask backend and SQLite database.
+| Index | Lane |
+|---:|---|
+| `0` | North |
+| `1` | East |
+| `2` | South |
+| `3` | West |
 
-Traffic data is collected from the Master ESP32 and periodically sent to the backend through a REST API.
+The dashboard provides controls to activate and clear emergency priority.
 
-### Data Flow
+---
+
+## Traffic Events
+
+The system monitors traffic conditions and supports the following event types:
+
+```text
+NONE
+CONGESTION
+SUDDEN_TRAFFIC
+LANE_BLOCKED
+ABNORMAL
+```
+
+Confirmed events are assigned severity levels:
+
+```text
+NORMAL
+LOW
+MEDIUM
+HIGH
+CRITICAL
+```
+
+A stability period is used to reduce false event detection caused by temporary sensor changes.
+
+---
+
+## Data Logging and Analytics
+
+Traffic status is periodically sent from the dashboard to the Flask backend.
 
 ```text
 Master ESP32
-     ↓
-Traffic Status JSON
-     ↓
+      ↓
+Traffic Status
+      ↓
 Dashboard
-     ↓
+      ↓
 Flask REST API
-     ↓
-Traffic Logger Service
-     ↓
+      ↓
 SQLite Database
+      ↓
+Analytics API
+      ↓
+Dashboard Charts
+```
 
-## Traffic Analytics
+Historical information includes:
 
-The dashboard provides historical traffic analytics using the data stored in the SQLite database.
-
-The Flask backend processes the stored traffic logs and provides aggregated information to the dashboard through REST API endpoints.
-
-### Analytics Overview
-
-The dashboard provides traffic statistics for different time periods:
-
-| Period | Information |
-|---|---|
-| Today | Total vehicle count, average traffic, and number of logs |
-| This Week | Weekly vehicle count, average traffic, and number of logs |
-| This Month | Monthly vehicle count, average traffic, and number of logs |
-| Lane Analysis | Average traffic for North, East, South, and West lanes |
-
-### Analytics Data Flow
-
-```text
-SQLite Traffic Logs
-        ↓
-Flask Analytics API
-        ↓
-Traffic Aggregation
-        ↓
-Dashboard
-        ↓
-Charts and Statistics
-
-## Web Dashboard
-
-The system provides a web-based dashboard for monitoring and managing the smart traffic controller.
-
-The dashboard is designed as a single-page interface where different functional sections can be accessed through the header navigation without reloading the page.
-
-### Dashboard Sections
-
-| Section | Purpose |
-|---|---|
-| Dashboard | Provides an overview of the current traffic-control status |
-| Live Traffic | Displays real-time traffic information for all four lanes |
-| Analytics | Displays historical traffic statistics and charts |
-| Events | Displays detected traffic events, severity information, and event history |
-| Emergency | Provides emergency vehicle priority controls |
-| System | Displays system and connectivity information |
-
-### Real-Time Monitoring
-
-The dashboard periodically requests the current status from the Master ESP32.
-
-The real-time information includes:
-
-- Current active lane
-- Current signal state
-- Vehicle count for each lane
-- Waiting information
-- Lane priority
-- Emergency status
-- Current traffic event
-- Traffic severity
-- Wi-Fi status
-- Signal-controller uptime
-
-### Live Traffic Display
-
-Each lane is represented using a dedicated traffic card.
-
-```text
-                LIVE TRAFFIC
-
-        ┌───────────┐
-        │   NORTH   │
-        │ Vehicles  │
-        │ Waiting   │
-        │ Priority  │
-        └───────────┘
-
-┌───────────┐             ┌───────────┐
-│   WEST    │             │   EAST    │
-│ Vehicles  │             │ Vehicles  │
-│ Waiting   │             │ Waiting   │
-│ Priority  │             │ Priority  │
-└───────────┘             └───────────┘
-
-        ┌───────────┐
-        │   SOUTH   │
-        │ Vehicles  │
-        │ Waiting   │
-        │ Priority  │
-        └───────────┘
-## REST API
-
-The system uses HTTP-based REST APIs for communication between the dashboard, Master ESP32, and Flask backend.
-
-### Master ESP32 API
-
-The Master ESP32 provides endpoints for real-time traffic monitoring and emergency control.
-
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/status` | `GET` | Returns the current traffic-controller status |
-| `/emergency` | `POST` | Activates emergency priority for a selected lane |
-| `/clear-emergency` | `POST` | Clears emergency priority |
-
-### `/status`
-
-The dashboard periodically requests the `/status` endpoint to obtain the latest traffic information.
-
-The response contains information including:
-
+- Timestamp
+- Lane traffic values
 - Current lane
 - Signal state
 - Traffic event
 - Traffic severity
-- Wi-Fi status
-- RSSI
-- Uptime
-- Vehicle count for each lane
-- Waiting information
-- Lane priority
-- Emergency status
 
-Example response structure:
+---
 
-```json
-{
-    "project": "SmartTrafficAI",
-    "version": "3.1",
-    "currentLane": "North",
-    "signalState": "GREEN",
-    "trafficEvent": "CONGESTION",
-    "trafficSeverity": "MEDIUM",
-    "lanes": [
-        {
-            "name": "North",
-            "vehicles": 10,
-            "waiting": 3,
-            "priority": 23,
-            "emergency": false
-        }
-    ]
-}
+## Dashboard
 
-## System Workflow
+The web dashboard provides the following sections:
 
-The complete system combines sensor data collection, traffic analysis, adaptive signal control, emergency priority, event detection, data logging, and dashboard monitoring.
-
-### Overall Workflow
-
-```text
-                 ┌──────────────────────┐
-                 │   HC-SR04 Sensors    │
-                 │      (4 Lanes)       │
-                 └──────────┬───────────┘
-                            │
-                            ↓
-                 ┌──────────────────────┐
-                 │    Sensor ESP32      │
-                 │  Sensor Processing   │
-                 └──────────┬───────────┘
-                            │
-                       JSON Data
-                            │
-                            ↓
-                 ┌──────────────────────┐
-                 │     Master ESP32     │
-                 │ Traffic Controller   │
-                 └──────────┬───────────┘
-                            │
-              ┌─────────────┼─────────────┐
-              ↓             ↓             ↓
-       Density Analysis  Event Detection  Emergency
-              │             │             │
-              └─────────────┼─────────────┘
-                            ↓
-                 ┌──────────────────────┐
-                 │  Lane Priority       │
-                 │  Calculation          │
-                 └──────────┬───────────┘
-                            ↓
-                 ┌──────────────────────┐
-                 │ Adaptive Signal      │
-                 │ Scheduling            │
-                 └──────────┬───────────┘
-                            ↓
-                 ┌──────────────────────┐
-                 │ Traffic Light        │
-                 │ Modules (4 Lanes)    │
-                 └──────────────────────┘
-                            │
-                            │
-             ┌──────────────┴──────────────┐
-             ↓                             ↓
-   ┌──────────────────────┐    ┌──────────────────────┐
-   │   Web Dashboard      │    │   Flask Backend      │
-   │ Real-Time Monitoring │    │ SQLite + Analytics   │
-   └──────────────────────┘    └──────────────────────┘
-## Installation and Setup
-
-### Prerequisites
-
-Install the following software before running the project:
-
-| Software | Purpose |
+| Section | Purpose |
 |---|---|
-| Arduino IDE | ESP32 firmware development and upload |
-| Python 3 | Flask backend |
-| Git | Source-code version control |
-| Web Browser | Dashboard access |
+| Dashboard | System overview |
+| Live Traffic | Real-time lane information |
+| Analytics | Historical traffic analysis |
+| Events | Event monitoring and history |
+| Emergency | Emergency priority control |
+| System | System and connectivity information |
 
-The ESP32 boards must also be configured with the required Wi-Fi network credentials.
+---
 
-### 1. Clone the Repository
+## Screenshots
 
-```bash
-git clone https://github.com/Anil-962/SmartTrafficAI.git
-cd SmartTrafficAI
-### 2. Configure the ESP32 Firmware
+### Dashboard
 
-The project uses two ESP32 boards:
+![Dashboard Overview](docs/images/dashboard-overview.png)
 
-- **Sensor ESP32:** Collects traffic information from four HC-SR04 ultrasonic sensors.
-- **Master ESP32:** Processes traffic information, controls the traffic signals, handles emergency priority, and provides the HTTP interface for the dashboard.
+### Live Traffic
 
-Open the corresponding firmware projects in **Arduino IDE**.
+![Live Traffic](docs/images/live-traffic.png)
 
-#### Sensor ESP32
+### Analytics
 
-Open the Sensor Node firmware and configure the Wi-Fi credentials according to the local network.
+![Traffic Analytics](docs/images/analytics.png)
 
-The Sensor ESP32 is responsible for:
+### Events
 
-- Reading the four HC-SR04 ultrasonic sensors
-- Processing distance measurements
-- Estimating traffic conditions
-- Sending sensor data to the Master ESP32
+![Traffic Events](docs/images/events.png)
 
-Upload the Sensor Node firmware to the Sensor ESP32.
+### Emergency Priority
 
-#### Master ESP32
+![Emergency Priority](docs/images/emergency.png)
 
-Open the Traffic Controller firmware in Arduino IDE.
+> Add the actual screenshots to `docs/images/` using the filenames above.
 
-The Master ESP32 is responsible for:
+---
 
-- Receiving sensor data
-- Maintaining lane traffic information
-- Calculating lane priority
-- Performing adaptive signal scheduling
-- Controlling the four traffic-light modules
-- Detecting traffic events
-- Handling emergency vehicle priority
-- Providing HTTP endpoints for the dashboard
-
-Upload the Traffic Controller firmware to the Master ESP32.
-
-#### Wi-Fi Configuration
-
-Configure the required Wi-Fi network credentials in the ESP32 firmware before uploading.
-
-The Master ESP32 and Sensor ESP32 must be connected to the appropriate network for communication with each other and with the dashboard.
+## Project Structure
 
 ```text
-Wi-Fi Network
-     │
-     ├───────────────┐
-     ↓               ↓
-Sensor ESP32     Master ESP32
-     │               │
-     │               ├── Traffic Signals
-     │               └── Dashboard
-     │
-     └── Sensor Data
+Smart-Traffic-Management-System/
+│
+├── backend/
+│   ├── api/
+│   ├── database/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   └── app.py
+│
+├── dashboard/
+│   ├── index.html
+│   ├── app.js
+│   └── style.css
+│
+├── diagrams/
+│
+├── docs/
+│   ├── API.md
+│   ├── Architecture.md
+│   ├── Setup.md
+│   └── UserGuide.md
+│
+├── firmware/
+│   ├── sensor_node/
+│   ├── traffic_controller/
+│   └── Traffic_Light_Test/
+│
+├── .gitignore
+└── README.md
+```
 
-### 3. Connect the Hardware
+---
 
-Connect the hardware components according to the project architecture.
+## Documentation
 
-The system uses two ESP32 boards:
+Detailed project documentation is available here:
 
-- **Sensor ESP32:** Connected to four HC-SR04 ultrasonic sensors.
-- **Master ESP32:** Connected to four traffic-light modules.
+| Document | Description |
+|---|---|
+| [Architecture](docs/Architecture.md) | System architecture, hardware/software design, data flow, and control architecture |
+| [API Documentation](docs/API.md) | Master ESP32 and Flask REST API reference |
+| [Setup Guide](docs/Setup.md) | Hardware, firmware, backend, dashboard setup, and testing |
+| [User Guide](docs/UserGuide.md) | Dashboard operation and system usage |
 
-#### Sensor ESP32 Connections
+---
 
-The four HC-SR04 sensors are assigned to the four traffic lanes.
+## Installation
 
-| Lane | Trigger Pin | Echo Pin |
-|---|---:|---:|
-| North | GPIO 13 | GPIO 12 |
-| East | GPIO 14 | GPIO 27 |
-| South | GPIO 26 | GPIO 25 |
-| West | GPIO 33 | GPIO 32 |
+For complete installation instructions, see:
 
-The Sensor ESP32 reads the distance measured by each sensor and associates the measurement with its corresponding traffic lane.
+**[Setup Guide](docs/Setup.md)**
 
-#### Master ESP32 Traffic-Light Connections
-
-The Master ESP32 controls the four traffic-light modules.
-
-| Lane | Red | Yellow | Green |
-|---|---:|---:|---:|
-| North | GPIO 25 | GPIO 26 | GPIO 27 |
-| East | GPIO 18 | GPIO 19 | GPIO 21 |
-| South | GPIO 22 | GPIO 23 | GPIO 5 |
-| West | GPIO 13 | GPIO 14 | GPIO 32 |
-
-#### Hardware Architecture
-
-```text
-                    ┌─────────────────┐
-                    │  Sensor ESP32   │
-                    └────────┬────────┘
-                             │
-              ┌──────────────┼──────────────┐
-              ↓              ↓              ↓
-          North Sensor   East Sensor   South Sensor
-                             │
-                         West Sensor
-                             │
-                             ↓
-                    Sensor Data Processing
-                             │
-                             ↓
-                    ┌─────────────────┐
-                    │  Master ESP32   │
-                    │ Traffic Control │
-                    └────────┬────────┘
-                             │
-          ┌──────────────────┼──────────────────┐
-          ↓                  ↓                  ↓
-      North Light        East Light         South Light
-                             │
-                         West Light
-
-### 4. Install Backend Dependencies
-
-The backend is implemented using Python and Flask.
-
-Before starting the backend, make sure Python 3 is installed on the system.
-
-Navigate to the backend directory:
-
-```bash
-cd backend
-pip install flask flask-cors
-pip show flask
-pip show flask-cors
-
-### 5. Start the Flask Backend
-
-After installing the backend dependencies, start the Flask application.
-
-Navigate to the backend directory:
-
-```bash
-cd backend
-python app.py
-
-
-### 6. Start the Dashboard
-
-```markdown
-### 6. Start the Dashboard
-
-The dashboard is located in the `dashboard/` directory.
+The general setup process is:
 
 ```text
-dashboard/
-├── index.html
-├── app.js
-└── style.css
-
-
-### 7. Verify System Communication
-
-```markdown
-### 7. Verify System Communication
-
-After starting the Sensor ESP32, Master ESP32, Flask backend, and dashboard, verify communication between all system components.
-
-### Communication Chain
-
-```text
-HC-SR04 Sensors
-       ↓
-Sensor ESP32
-       ↓
-Sensor Data
-       ↓
-Master ESP32
-       ↓
-┌──────┴──────────────┐
-↓                     ↓
-Dashboard          Traffic Control
-↓
-Flask Backend
-↓
-SQLite Database
-
-
-### 8. Test Adaptive Traffic Control
-
-```markdown
-### 8. Test Adaptive Traffic Control
-
-After verifying basic communication, test the adaptive traffic-control functionality.
-
-Observe the four traffic lanes and change the traffic density detected by the sensors.
-
-The controller should:
-
-1. Receive sensor information.
-2. Update the traffic condition of each lane.
-3. Calculate lane priority.
-4. Select the next lane.
-5. Calculate the appropriate Green duration.
-6. Control the traffic-light sequence.
-7. Continue monitoring the traffic conditions.
-
-### Expected Signal Sequence
-
-```text
-Selected Lane
-     ↓
-Yellow
-     ↓
-Green
-     ↓
-Yellow
-     ↓
-All Red
-     ↓
-Next Selected Lane
-
-
-### 9. Test Emergency Priority
-
-```markdown
-### 9. Test Emergency Priority
-
-The Emergency section of the dashboard can be used to test emergency vehicle priority.
-
-Select one of the four lanes:
-
-- North
-- East
-- South
-- West
-
-The dashboard sends an emergency request to the Master ESP32.
-
-### Expected Behavior
-
-```text
-Select Emergency Lane
-        ↓
-Emergency Priority Enabled
-        ↓
-Lane Receives Highest Priority
-        ↓
-Signal Controller Handles Transition
-        ↓
-Emergency Lane Gets Green
-
-
-### 10. Test Traffic Events
-
-```markdown
-### 10. Test Traffic Events
-
-The traffic-event detection system can be tested by changing the traffic conditions detected by the sensors.
-
-The system can identify traffic conditions such as:
-
-- `CONGESTION`
-- `SUDDEN_TRAFFIC`
-- `LANE_BLOCKED`
-- `ABNORMAL`
-
-The event detection logic uses a stability period of approximately 5 seconds to reduce false detections caused by temporary sensor changes.
-
-### Expected Behavior
-
-```text
-Traffic Condition Changes
+Configure ESP32 Firmware
           ↓
-Event Detection
+Connect Hardware
           ↓
-Stability Check
+Upload Sensor Firmware
           ↓
-Confirmed Event
+Upload Master Firmware
           ↓
-Severity Calculation
+Configure Network
           ↓
-Dashboard
+Install Python Dependencies
           ↓
-SQLite Historical Log
-
-
-### 11. Verify Traffic Logging
-
-```markdown
-### 11. Verify Traffic Logging
-
-The dashboard periodically sends the latest traffic status to the Flask backend.
-
-The backend stores the received information in the SQLite `traffic_logs` table.
-
-The logging flow is:
-
-```text
-Master ESP32
-     ↓
-Dashboard
-     ↓
-POST /api/traffic/log
-     ↓
-Flask Backend
-     ↓
-Traffic Logger Service
-     ↓
-SQLite
-
-
-### 12. Verify Analytics
-
-```markdown
-### 12. Verify Analytics
-
-Open the **Analytics** section of the dashboard after traffic data has been stored in SQLite.
-
-The analytics module retrieves historical information through:
-
-```text
-GET /api/traffic/analytics
-
-
-
-### 13. Complete System Test
-
-```markdown
-### 13. Complete System Test
-
-Perform a final end-to-end test after all individual components have been verified.
-
-### Test Sequence
-
-```text
-1. Power the Sensor ESP32
+Start Flask Backend
           ↓
-2. Power the Master ESP32
+Start Dashboard
           ↓
-3. Verify Sensor Data
-          ↓
-4. Verify Traffic Signals
-          ↓
-5. Start Flask Backend
-          ↓
-6. Start Dashboard
-          ↓
-7. Verify Real-Time Traffic
-          ↓
-8. Test Adaptive Green Timing
-          ↓
-9. Test Traffic Events
-          ↓
-10. Test Emergency Priority
-          ↓
-11. Test Emergency Clear
-          ↓
-12. Verify SQLite Logging
-          ↓
-13. Verify Analytics
+Verify System
+```
 
+---
 
-### 14. Troubleshooting
+## API
 
-```markdown
-### 14. Troubleshooting
+The main APIs are:
 
-| Problem | Possible Cause | Check |
+| Component | Endpoint | Method |
 |---|---|---|
-| Sensor data unavailable | Sensor wiring or incorrect GPIO configuration | Check sensor connections and GPIO assignments |
-| Master ESP32 unavailable | Wi-Fi or IP address problem | Check Serial Monitor and IP address |
-| Traffic lights do not operate | Incorrect GPIO wiring | Verify traffic-light GPIO configuration |
-| Dashboard cannot connect to ESP32 | Incorrect ESP32 IP address | Check `dashboard/app.js` |
-| Dashboard cannot connect to backend | Flask server not running or incorrect backend IP | Start Flask and verify the configured address |
-| CORS error | Backend or ESP32 CORS configuration | Verify CORS handling and browser console |
-| Analytics are empty | No historical records | Run the system long enough to create traffic logs |
-| Emergency button does not work | Incorrect ESP32 address or endpoint | Verify `/emergency` configuration |
-| Emergency cannot be cleared | Incorrect clear endpoint | Verify `/clear-emergency` configuration |
-| Traffic events fluctuate | Temporary sensor changes | Allow the event stability period to complete |
-| SQLite records are missing | Logging request failed | Check Flask terminal and browser console |
+| Master ESP32 | `/status` | `GET` |
+| Master ESP32 | `/emergency` | `POST` |
+| Master ESP32 | `/clear-emergency` | `POST` |
+| Flask Backend | `/api/traffic/log` | `POST` |
+| Flask Backend | `/api/traffic/analytics` | `GET` |
 
-For debugging, check the Arduino IDE Serial Monitor, Flask terminal output, and browser developer console.
+For complete request and response information:
 
-## Limitations and Future Improvements
+**[API Documentation](docs/API.md)**
 
-The current prototype demonstrates adaptive traffic management, traffic-event detection, emergency priority, historical logging, and analytics using ESP32-based hardware and ultrasonic sensors.
+---
 
-### Current Limitations
+## Limitations
 
-- HC-SR04 ultrasonic sensors provide basic vehicle presence and distance information but do not provide camera-level vehicle classification.
-- The current sensor setup cannot reliably identify rash driving behavior.
-- The current system cannot reliably perform hit-and-run identification or vehicle identification because it does not use cameras, license-plate recognition, or vehicle tracking.
-- Emergency vehicle priority is currently activated through the system's emergency-control interface rather than automatic camera-based emergency vehicle recognition.
-- Traffic-density estimation depends on the accuracy and placement of the ultrasonic sensors.
-- The prototype is designed for demonstration and experimental traffic-control scenarios rather than direct deployment on public roads.
+The current prototype uses ultrasonic sensors for traffic detection.
 
-### Future Improvements
+The available hardware supports traffic-density estimation, vehicle presence/distance measurement, congestion-related detection, and traffic anomaly detection.
 
-The system can be extended with additional sensing and intelligent traffic-management capabilities.
+The current system does not reliably provide:
 
-Potential improvements include:
+- Vehicle speed measurement
+- Driver behavior analysis
+- License plate recognition
+- Vehicle identification
+- Reliable rash-driving detection
+- Reliable hit-and-run identification
 
-1. **Camera-Based Vehicle Detection**
-   - Use computer vision to detect and classify vehicles.
-   - Distinguish cars, buses, trucks, motorcycles, and other road users.
+These capabilities would require additional sensing technologies such as cameras, speed sensors, or vehicle-tracking systems.
 
-2. **Automatic Emergency Vehicle Detection**
-   - Detect emergency vehicles using computer vision, siren recognition, or dedicated communication systems.
-   - Automatically trigger emergency priority without manual selection.
+---
 
-3. **Rash Driving Detection**
-   - Add camera-based vehicle tracking and speed estimation.
-   - Detect behaviors such as excessive speed or abnormal lane movement.
+## Future Improvements
 
-4. **Hit-and-Run Detection**
-   - Use cameras and vehicle tracking to identify vehicles involved in incidents.
-   - Integrate license-plate recognition where legally and technically appropriate.
+Potential future improvements include:
 
-5. **IoT Cloud Integration**
-   - Store traffic data in a cloud platform.
-   - Enable remote monitoring and long-term analytics.
+- Camera-based vehicle detection
+- Vehicle-speed measurement
+- Automatic emergency vehicle detection
+- License plate recognition
+- Improved traffic prediction
+- Machine-learning-based traffic forecasting
+- Cloud-based monitoring
+- Mobile application
+- Advanced vehicle tracking
+- Multi-intersection coordination
 
-6. **Advanced Traffic Prediction**
-   - Apply machine-learning models to historical traffic data.
-   - Predict congestion and traffic demand before conditions become severe.
-
-7. **Multi-Junction Coordination**
-   - Connect multiple traffic controllers.
-   - Coordinate signals across several intersections to improve traffic flow.
-
-8. **Production-Grade Hardware**
-   - Replace prototype wiring and sensors with ruggedized sensors, protected enclosures, appropriate power systems, and field-rated communication hardware.
-
-### Future System Vision
-
-```text
-Current Prototype
-      ↓
-Improved Sensors
-      ↓
-Computer Vision
-      ↓
-Vehicle Classification
-      ↓
-Automatic Emergency Detection
-      ↓
-Traffic Prediction
-      ↓
-Multi-Junction Coordination
-      ↓
-Intelligent City-Wide Traffic Management
+---
 
 ## Project Status
 
-The project has been developed as an end-to-end working prototype combining embedded traffic control, IoT communication, web monitoring, emergency priority, event detection, historical data storage, and analytics.
+The current prototype includes:
 
-### Implemented Features
-
-- [x] Four-lane traffic signal control
-- [x] FSM-based traffic signal scheduling
-- [x] Four HC-SR04 ultrasonic sensors
-- [x] Dedicated Sensor ESP32
-- [x] Master ESP32 traffic controller
-- [x] Traffic density estimation
+- [x] Four-lane traffic monitoring
+- [x] ESP32 sensor integration
+- [x] Traffic-light control
+- [x] FSM-based signal transitions
+- [x] Adaptive Green timing
 - [x] Lane priority calculation
-- [x] Adaptive Green signal timing
-- [x] Waiting-time consideration
+- [x] Waiting-time handling
 - [x] Traffic event detection
-- [x] Traffic event severity classification
-- [x] Event stability confirmation
-- [x] Emergency vehicle priority control
-- [x] Emergency priority dashboard controls
-- [x] Real-time traffic dashboard
-- [x] Historical traffic logging
-- [x] SQLite database
-- [x] Daily, weekly, and monthly traffic analytics
-- [x] Lane-based traffic analysis
-- [x] Event statistics and event history
-- [x] Responsive dashboard interface
-- [x] Git and GitHub version control
+- [x] Traffic severity classification
+- [x] Emergency vehicle priority
+- [x] SQLite traffic logging
+- [x] Historical traffic analytics
+- [x] Web dashboard
+- [x] Emergency dashboard synchronization
 
-### Current Development Stage
+---
 
-The system is currently at the **working prototype and demonstration stage**.
-
-The implementation focuses on demonstrating the complete data flow:
+## Technologies
 
 ```text
+Embedded
+├── ESP32
+├── Arduino IDE
+└── C/C++
+
 Sensors
-   ↓
-Sensor ESP32
-   ↓
-Master ESP32
-   ↓
-Traffic Processing
-   ↓
-Adaptive Signal Control
-   ↓
-Dashboard
-   ↓
-Flask Backend
-   ↓
-SQLite
-   ↓
-Analytics   
+└── HC-SR04 Ultrasonic Sensors
 
-## GitHub Repository
+Backend
+├── Python
+├── Flask
+├── Flask-CORS
+└── SQLite
 
-The complete project source code, firmware, backend, dashboard, documentation, and project files are maintained in the GitHub repository.
+Frontend
+├── HTML5
+├── CSS3
+├── JavaScript
+└── Chart.js
 
-Repository:
+Version Control
+├── Git
+└── GitHub
+```
 
-**SmartTrafficAI — IoT-Based Adaptive Smart Traffic Management System with Emergency Vehicle Priority**
+---
 
-The repository contains the implementation of the ESP32-based traffic controller, sensor node, Flask backend, SQLite database integration, web dashboard, and supporting documentation.
+## Repository
 
-### Version Control
+The complete source code, firmware, dashboard, backend, diagrams, and documentation are maintained in this repository.
 
-Git is used to manage the development history of the project.
+**Repository:**  
+https://github.com/Anil-962/SmartTrafficAI
 
-Major development milestones are maintained using Git commits and version tags, including:
-
-```text
-v3.0-sensor-integration
-v3.1-emergency-priority
-v3.2-sensor-calibration
-v3.3-adaptive-signal-timing
-v4.0-sqlite-logging-foundation
-v4.1-traffic-logging
-v4.2-emergency-dashboard
+---
 
 ## License
 
-This project is developed as an academic major project for educational, research, and demonstration purposes.
+This project is developed as an academic major project.
 
-The source code and project materials are provided through the GitHub repository for learning, experimentation, and further development.
-
-Unless otherwise specified, all project-specific source code and documentation are the work of the project author.
+If a specific open-source license is required for distribution, it can be added to the repository separately.
