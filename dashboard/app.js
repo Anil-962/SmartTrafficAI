@@ -1,10 +1,10 @@
-const url = "http://192.168.137.89/status";
-const loggingUrl = "http://10.226.61.224:5000/api/traffic/log";
+const url = "http://192.168.137.192/status";
+const loggingUrl = "http://10.24.210.224:5000/api/traffic/log";
 const emergencyUrl =
-    "http://192.168.137.89/emergency";
+    "http://192.168.137.192/emergency";
 
 const clearEmergencyUrl =
-    "http://192.168.137.89/clear-emergency";
+    "http://192.168.137.192/clear-emergency";
 async function updateDashboard()
 {
     try
@@ -169,7 +169,7 @@ async function updateAnalytics()
     try
     {
         const response = await fetch(
-            "http://10.226.61.224:5000/api/traffic/analytics"
+            "http://10.24.210.224:5000/api/traffic/analytics"
         );
 
         if(!response.ok)
